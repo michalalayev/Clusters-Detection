@@ -23,7 +23,6 @@ void array_add_row(spmat *A, const int *nodes, int rank, int i)
 
 	for (j = 0; j < rank; ++j) {
 		col = *nodes;
-		arr_mat -> values[insertind] = 1;
 		arr_mat -> colind[insertind] = col;
 		insertind++;
 		nodes++;
@@ -36,18 +35,18 @@ void array_free(spmat *A)
 	ArrayMat *arr_mat;
 
 	arr_mat = (ArrayMat*) A -> private;
-	free(arr_mat -> values);
 	free(arr_mat -> colind);
 	free(arr_mat -> rowptr);
 	free(arr_mat);
 	free(A);
 }
 
+
 void array_mult(const spmat *A, const double *v, double *result)
 {
 	ArrayMat *arr_mat;
-	int *rp, *colind, n, i, j, a, b, nnz_in_row;
-	double *vals, sum;
+	int *rp, *colind, *vals, n, i, j, a, b, nnz_in_row;
+	double sum;
 
 	arr_mat = (ArrayMat*) A->private;
 	rp = arr_mat->rowptr;
@@ -79,6 +78,7 @@ spmat* spmat_allocate_array(int n, int nnz)
 
 	sp = (spmat*) malloc(sizeof(spmat));
 	assert(sp != NULL);
+	/* ### change the assert ### */
 
 	sp->n = n;
 	sp->add_row = array_add_row;
@@ -88,29 +88,29 @@ spmat* spmat_allocate_array(int n, int nnz)
 	mat = (ArrayMat*) malloc(sizeof(ArrayMat));
 	if (mat == NULL) {
 		free(sp);
-		return NULL;
+		return NULL; /*### return error message ###*/
 	}
 
-	mat->values = (double*) malloc(sizeof(double) * nnz);
+	/*mat->values = (int*) malloc(sizeof(int) * nnz);
 	if (mat->values == NULL) {
 		free(mat);
 		free(sp);
-		return NULL;
-	}
+		return NULL;  ### return error message ###
+	} */
 	mat->colind = (int*) malloc(sizeof(int) * nnz);
 	if (mat->colind == NULL) {
-		free(mat->values);
+		/*free(mat->values);*/
 		free(mat);
 		free(sp);
-		return NULL;
+		return NULL;  /*### return error message ###*/
 	}
 	mat->rowptr = (int*) malloc(sizeof(int) * (n+1));
 	if (mat->rowptr == NULL) {
 		free(mat->colind);
-		free(mat->values);
+		/*free(mat->values);*/
 		free(mat);
 		free(sp);
-		return NULL;
+		return NULL;  /*### return error message ###*/
 	}
 	mat->rowptr[0] = 0;
 

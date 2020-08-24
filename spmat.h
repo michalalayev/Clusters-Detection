@@ -3,7 +3,7 @@
 
 typedef struct
 {
-	int *values;
+	int* values;
 	int *colind;
 	int *rowptr;
 } ArrayMat;
