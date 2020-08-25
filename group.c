@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "spmat.h"
 #include "group.h"
+#include "errors.h"
+
 /*typedef struct _ELEM
 {*/
 	/*int data; the name of the node*/
@@ -21,66 +23,53 @@ typedef struct
 	int* ranks;*/
 /*} group;*/
 
-LIST* create_list(ELEM* head, int len)
+group* create_group(ELEM* head, int len)
 {
-	LIST* lst;
+	group* g;
 
-	lst = (LIST*) malloc(sizeof(LIST));
-	/*### assert lst != NULL ###*/
-	lst->head = head;
-	lst->len = len;
-	return lst;
+	g = (group*) malloc(sizeof(group));
+	/*### assert g != NULL ###*/
+	g->head = head;
+	g->len = len;
+	return g;
 }
 
-LIST* initial_list(int n)
+group* initial_group(int n)
 {
 	ELEM *head, *tail, *node;
 	int i;
-	LIST *lst;
+	group *g;
 
 	head = (ELEM*) malloc(sizeof(ELEM));
-	/*###assert(head!=NULL); ###*/
-	printf("hereinitial");
+	check_alloc(head);
 	head -> data = 0;
 	tail = head;
 	for (i = 1; i < n; ++i) {
 		node = (ELEM*) malloc(sizeof(ELEM));
-		/*###assert(node!=NULL); ###*/
+		check_alloc(node);
 		node->data = i;
 		tail->next = node;
 		tail = tail->next;
 	}
 	tail->next = NULL;
 
-	lst = (LIST*) malloc(sizeof(LIST));
-	/*###assert(lst!=NULL); ###*/
-	lst->len = n;
-	lst->head = head;
-	return lst;
-}
-
-group* create_group(LIST* lst)
-{
-	group* g;
-
 	g = (group*) malloc(sizeof(group));
-	/*###assert(g!=NULL); ###*/
-	/*g->Ag = mat;*/
-	g->list = lst;
-	/*g->ranks = ranks;*/
+	check_alloc(g);
+	g->len = n;
+	g->head = head;
 	return g;
 }
 
-LIST** split_list(int* s, LIST* list)
+group** split_group(int* s, group* g)
 {
 	int len, i, first, second, cnt1, cnt2, curr ,prev;
 	ELEM *head2, *last1, *last2;
-	LIST *empty_group, *list2;
-	LIST** splited_g;
+	group *empty_group, *g2;
+	group** splited_g;
 
-	splited_g = (LIST**) malloc(sizeof(LIST*)*2);
-	/*###assert(splited_g!=NULL); ###*/
-	len = list->len;
+	splited_g = (group**) malloc(sizeof(group*)*2);
+	check_alloc(splited_g);
+	len = g->len;
 	cnt1 = cnt2 = 0;
 	first = *s;
 	second = -first;
@@ -89,12 +78,12 @@ LIST** split_list(int* s, LIST* list)
 		s++;
 	}
 	if (cnt1 == len) {
-		empty_group = create_list(NULL,0);
-		splited_g[0] = list;
+		empty_group = create_group(NULL,0);
+		splited_g[0] = g;
 		splited_g[1] = empty_group;
 		return splited_g;
 	}
-	last1 = list->head;
+	last1 = g->head;
 	for (i = 0; i < cnt1-1; ++i) {
 		last1 = last1->next;
 	}
@@ -133,14 +122,14 @@ LIST** split_list(int* s, LIST* list)
 	}
 	last1->next = NULL;
 	last2->next = NULL;
-	list->len = cnt1;
-	list2 = create_list(head2, cnt2);
-	splited_g[0] = list;
-	splited_g[1] = list2;
+	g->len = cnt1;
+	g2 = create_group(head2, cnt2);
+	splited_g[0] = g;
+	splited_g[1] = g2;
 	return splited_g;
 }
 
-int* g_to_vector(LIST* g_list, int n)
+int* g_to_vector(group* g, int n)
 {
 	int nodeNum;
 	int* g_vector;
@@ -148,8 +137,9 @@ int* g_to_vector(LIST* g_list, int n)
 	int val;
 	int g_len;
 	ELEM* currNode;
-	currNode = g_list->head;
-	g_len=g_list->len;
+
+	currNode = g->head;
+	g_len = g->len;
 	g_vector = (int*) calloc(n,sizeof(int));
 
 	for(i = 0; i < g_len; i++)
@@ -163,7 +153,6 @@ int* g_to_vector(LIST* g_list, int n)
 		g_vector[nodeNum] = val;
 		currNode = currNode->next;
 	}
-
 	return g_vector;
 }
 

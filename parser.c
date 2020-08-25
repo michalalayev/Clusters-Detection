@@ -1,5 +1,6 @@
 #include "spmat.h"
 #include "parser.h"
+#include "errors.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <stdio.h>
@@ -29,23 +30,22 @@ spmat* create_A(char* filename)
 	spmat* A;
 
 	input = fopen(filename, "r");
-	/*### check if input != NULL ###*/
+	check_fopen(input);
 	k = fread(&n, sizeof(int), 1, input);
-	/*### check if k == 1 ###*/
-	k++; /*delete this later*/
+	check_fread(k,1);
 	nnz = calc_nnz(filename, n);
 	A = spmat_allocate_array(n, nnz);
 	ranks_vec = (int*) malloc(sizeof(int)*n);
-	/*### check if ranks != NULL ###*/
+	check_alloc(ranks_vec);
 
 	for (i = 0; i < n; ++i) {
 		k = fread(&rank, sizeof(int), 1, input);
-		/*### check if k == 1 ###*/
+		check_fread(k,1);
 		*ranks_vec = rank;
 		ranks_vec++;
 		nodes = (int*) malloc(sizeof(int) * rank);
 		k = fread(nodes, sizeof(int), rank, input);
-		/*### check if k == rank ###*/
+		check_fread(k,rank);
 		A->add_row(A, nodes, rank, i);
 	}
 	ranks_vec -= n;

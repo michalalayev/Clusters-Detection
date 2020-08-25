@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "spmat.h"
 #include "group.h"
+
 void check_nnz(const char* filename, int n) {
 	int test,res;
 
@@ -44,18 +45,22 @@ void print_k(int n) {
 void check_g_to_array()
 {
 	ELEM *node;
-	LIST *lst;
+	group *g;
 	int i;
 	int *new_g;
-	lst = initial_list(10);
-	node = lst->head;
-	for(i = 0; i<10; i++)
+	g = initial_group(5);
+	node = g->head;
+	node->data = 1;
+	node->next->data = 3;
+	node->next->next->data = 4;
+	node->next->next->next->data = 6;
+	node->next->next->next->next->data = 7;
+	for(i = 0; i<5; i++)
 		{
 			printf("%d",node->data);
 			node=node->next;
-
 		}
-	new_g = g_to_vector(lst,10);
+	new_g = g_to_vector(g,10);
 
 	printf("\n");
 	for(i = 0; i<10; i++)
@@ -67,26 +72,26 @@ void check_g_to_array()
 
 void check_split()
 {
-	LIST **pointer;
+	group **pointer;
 	/*int cnt1;
 	int cnt2;*/
 	int i, cnt1, cnt2;
 	int* arr;
-	LIST *lst2;
+	group *g2;
 	ELEM *currNode2;
 
-	lst2 = initial_list(10);
+	g2 = initial_group(10);
 	arr = (int*) malloc(sizeof(int)*10);
 	for(i = 0; i < 10; i++)
 	{
 		arr[i] = -1;
 	}
-	arr[0] = 1;
-/*	arr[3] = 1;
+	/*arr[0] = 1;*/
+	arr[3] = 1;
 	arr[5] = 1;
-	arr[7] = 1;*/
-	arr[9] = 1;
-	pointer = split_list(arr,lst2);
+	arr[7] = 1;
+	/*arr[9] = 1;*/
+	pointer = split_group(arr,g2);
 	cnt1 = pointer[0]->len;
 	printf("cnt1 = %d\n",cnt1);
 	cnt2 = pointer[1]->len;
@@ -110,16 +115,48 @@ void check_split()
 
 int main (int argc, char* argv[]) {
 
+	spmat *A, *Ag;
+	group* g;
 	char* filename;
+	ELEM* node;
+	ArrayMat *g_mat, *A_mat;
+	int *g_rp, *g_colind, i, *A_rp;
 
-	argc += 0;
 	filename = argv[1];
+	argc+=0;
+	g = initial_group(4);
+	node = g->head;
+	node->data = 3;
+	node->next->data = 7;
+	node->next->next->data = 8;
+	node->next->next->next->data = 12;
 
-	print_A(filename,20);
-	print_k(20);
-
+	for(i = 0; i < 4; ++i )
+	{
+		printf("%d ",node->data);
+		node = node->next;
+	}
+	printf("\n");
+	A = create_A(filename);
+	A_mat = (ArrayMat*) A->private;
+	A_rp = A_mat->rowptr;
+	for (i = 0; i < 4; ++i) {
+			printf("%d ",A_rp[i]);
+		}
+	printf("\n");
+	Ag = create_Ag(A, g, 4);
+	g_mat = (ArrayMat*) Ag->private;
+	g_rp = g_mat->rowptr;
+	g_colind = g_mat->colind;
+	printf("colind:\n");
+	for (i = 0; i < 4; ++i) {
+		printf("%d ",g_colind[i]);
+	}
+	printf("\nrowptr:\n");
+	for (i = 0; i < 5; ++i) {
+		printf("%d ",g_rp[i]);
+	}
 	return 0;
-
 
 }
 

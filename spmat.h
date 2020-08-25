@@ -1,6 +1,8 @@
 #ifndef _SPMAT_H
 #define _SPMAT_H
 
+#include "group.h"
+
 typedef struct
 {
 	int* values;
@@ -32,5 +34,6 @@ spmat* spmat_allocate_list(int n); */
 
 /* Allocates a new arrays sparse matrix of size n with nnz non-zero elements */
 spmat* spmat_allocate_array(int n, int nnz);
+spmat* create_Ag(spmat* A, group* g, int nnz);
 
 #endif

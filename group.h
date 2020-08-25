@@ -18,19 +18,18 @@ typedef struct
 {
 	ELEM* head;
 	int len;
-} LIST;
-
-typedef struct
-{
-	LIST* list;
-	/*spmat* Ag;
-	int* ranks;*/
 } group;
 
-LIST* create_list(ELEM* head, int len);
-LIST* initial_list(int n);
-group* create_group(LIST* lst);
-int* g_to_vector(LIST* g_list, int n);
-LIST** split_list(int* s, LIST* list);
+/*typedef struct
+{
+	LIST* list;
+	spmat* Ag;
+	int* ranks;
+} group;*/
+
+group* create_group(ELEM* head, int len);
+group* initial_group(int n);
+int* g_to_vector(group* g, int n);
+group** split_group(int* s, group* g);
 
 #endif /* GROUP_H_ */

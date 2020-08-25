@@ -2,11 +2,10 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "spmat.h"
-
+#include "errors.h"
 
 /*typedef struct
 {
-	int *values;
 	int *colind;
 	int *rowptr;
 } ArrayMat;*/
@@ -70,15 +69,13 @@ void array_mult(const spmat *A, const double *v, double *result)
 	}
 }
 
-
 spmat* spmat_allocate_array(int n, int nnz)
 {
 	spmat *sp;
 	ArrayMat *mat;
 
 	sp = (spmat*) malloc(sizeof(spmat));
-	assert(sp != NULL);
-	/* ### change the assert ### */
+	check_alloc(sp);
 
 	sp->n = n;
 	sp->add_row = array_add_row;
@@ -86,10 +83,11 @@ spmat* spmat_allocate_array(int n, int nnz)
 	sp->mult = array_mult;
 
 	mat = (ArrayMat*) malloc(sizeof(ArrayMat));
-	if (mat == NULL) {
+	check_alloc(mat);
+	/*if (mat == NULL) {
 		free(sp);
-		return NULL; /*### return error message ###*/
-	}
+		return NULL;
+	}*/
 
 	/*mat->values = (int*) malloc(sizeof(int) * nnz);
 	if (mat->values == NULL) {
@@ -98,23 +96,77 @@ spmat* spmat_allocate_array(int n, int nnz)
 		return NULL;  ### return error message ###
 	} */
 	mat->colind = (int*) malloc(sizeof(int) * nnz);
-	if (mat->colind == NULL) {
-		/*free(mat->values);*/
+	check_alloc(mat->colind);
+	/*if (mat->colind == NULL) {
 		free(mat);
 		free(sp);
-		return NULL;  /*### return error message ###*/
-	}
-	mat->rowptr = (int*) malloc(sizeof(int) * (n+1));
-	if (mat->rowptr == NULL) {
+		return NULL;  ### return error message ###
+	}*/
+	mat->rowptr = (int*) malloc(sizeof(int) * n);
+	check_alloc(mat->rowptr);
+	/*if (mat->rowptr == NULL) {
 		free(mat->colind);
-		/*free(mat->values);*/
 		free(mat);
 		free(sp);
-		return NULL;  /*### return error message ###*/
-	}
+		return NULL;  ### return error message ###
+	}*/
 	mat->rowptr[0] = 0;
 
 	sp->private = (void*) mat;
 	return sp;
 }
+
+spmat* create_Ag(spmat* A, group* g, int nnz) {
+
+	spmat* Ag;
+	int len, data, start, range, end, i, val, cnt;
+	ELEM* node;
+	ArrayMat *mat, *g_mat;
+	int *g_vec, *rp, *colind, *g_rp, *g_colind;
+
+	len = g->len;
+	node = g->head;
+	mat = (ArrayMat*) A->private;
+	rp = mat->rowptr;
+	colind = mat->colind;
+	g_vec = g_to_vector(g,A->n);
+	Ag = spmat_allocate_array(len, nnz);
+	g_mat = (ArrayMat*) Ag->private;
+	g_rp = g_mat->rowptr;
+	g_rp++;
+	g_colind = g_mat->colind;
+	cnt = 0;
+
+	for ( ; node != NULL; node = node->next){
+		data = node->data;
+		start = rp[data];
+		range = rp[data+1] - start;
+		end = start + range;
+		for (i = start; i < end; ++i) {
+			val = g_vec[colind[i]];
+			if (val != 0) {
+				if (val == -1) {
+					*g_colind = 0;
+				}
+				*g_colind = val;
+				cnt++;
+				g_colind++;
+			}
+		}
+		*g_rp = cnt;
+		g_rp++;
+	}
+	return Ag;
+}
+
+
+
+
+
+
+
+
+
+
+
 
