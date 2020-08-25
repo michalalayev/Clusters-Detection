@@ -112,10 +112,31 @@ void check_split()
 		currNode2=currNode2->next;
 	}
 }
+void check_create_group_by_array()
+{
+	int* arr;
+	int i;
+	group *g;
+	ELEM *node;
+	arr = (int*) malloc(sizeof(int)*10);
+	for(i = 0; i < 10; i++)
+	{
+		arr[i] = i+3;
+	}
+	arr[4] = 17;
+	g = create_group_by_array(arr, 10);
+	node = g->head;
+	for(i = 0; i < 10; i++)
+	{
+		printf("%d\n", node->data);
+		node = node->next;
+	}
+}
+int main () {
 
-int main (int argc, char* argv[]) {
 
-	spmat *A, *Ag;
+	check_create_group_by_array();
+	/*spmat *A, *Ag;
 	group* g;
 	char* filename;
 	ELEM* node;
@@ -155,7 +176,7 @@ int main (int argc, char* argv[]) {
 	printf("\nrowptr:\n");
 	for (i = 0; i < 5; ++i) {
 		printf("%d ",g_rp[i]);
-	}
+	}*/
 	return 0;
 
 }

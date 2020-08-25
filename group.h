@@ -31,5 +31,6 @@ group* create_group(ELEM* head, int len);
 group* initial_group(int n);
 int* g_to_vector(group* g, int n);
 group** split_group(int* s, group* g);
+group* create_group_by_array(int *arr, int len);
 
 #endif /* GROUP_H_ */
