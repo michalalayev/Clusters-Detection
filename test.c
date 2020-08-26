@@ -60,7 +60,8 @@ void check_g_to_array()
 			printf("%d",node->data);
 			node=node->next;
 		}
-	new_g = g_to_vector(g,10);
+	new_g = (int*) calloc(10,sizeof(int));
+	g_to_vector(g,new_g);
 
 	printf("\n");
 	for(i = 0; i<10; i++)
@@ -132,19 +133,14 @@ void check_create_group_by_array()
 		node = node->next;
 	}
 }
-int main () {
 
-
-	check_create_group_by_array();
-	/*spmat *A, *Ag;
+void check_create_Ag(char* filename) {
+	spmat *A, *Ag;
 	group* g;
-	char* filename;
 	ELEM* node;
 	ArrayMat *g_mat, *A_mat;
-	int *g_rp, *g_colind, i, *A_rp;
+	int *g_rp, *g_colind, i, *A_rp, *g_vector;
 
-	filename = argv[1];
-	argc+=0;
 	g = initial_group(4);
 	node = g->head;
 	node->data = 3;
@@ -162,10 +158,12 @@ int main () {
 	A_mat = (ArrayMat*) A->private;
 	A_rp = A_mat->rowptr;
 	for (i = 0; i < 4; ++i) {
-			printf("%d ",A_rp[i]);
-		}
+		printf("%d ",A_rp[i]);
+	}
 	printf("\n");
-	Ag = create_Ag(A, g, 4);
+
+	g_vector = (int*) calloc(4,sizeof(int));
+	Ag = create_Ag(A, g, 4, g_vector);
 	g_mat = (ArrayMat*) Ag->private;
 	g_rp = g_mat->rowptr;
 	g_colind = g_mat->colind;
@@ -176,7 +174,11 @@ int main () {
 	printf("\nrowptr:\n");
 	for (i = 0; i < 5; ++i) {
 		printf("%d ",g_rp[i]);
-	}*/
+	}
+}
+
+int main () {
+
 	return 0;
 
 }

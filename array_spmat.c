@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "spmat.h"
 #include "errors.h"
+#include <string.h>
 
 /*typedef struct
 {
@@ -116,20 +117,25 @@ spmat* spmat_allocate_array(int n, int nnz)
 	return sp;
 }
 
-spmat* create_Ag(spmat* A, group* g, int nnz) {
+void reset_row(int* row, int n) {
 
+	memset(row, 0, sizeof(int)*n);
+}
+
+spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector)
+{
 	spmat* Ag;
 	int len, data, start, range, end, i, val, cnt;
 	ELEM* node;
 	ArrayMat *mat, *g_mat;
-	int *g_vec, *rp, *colind, *g_rp, *g_colind;
+	int *rp, *colind, *g_rp, *g_colind;
 
 	len = g->len;
 	node = g->head;
 	mat = (ArrayMat*) A->private;
 	rp = mat->rowptr;
 	colind = mat->colind;
-	g_vec = g_to_vector(g,A->n);
+	g_to_vector(g, g_vector);
 	Ag = spmat_allocate_array(len, nnz);
 	g_mat = (ArrayMat*) Ag->private;
 	g_rp = g_mat->rowptr;
@@ -143,7 +149,7 @@ spmat* create_Ag(spmat* A, group* g, int nnz) {
 		range = rp[data+1] - start;
 		end = start + range;
 		for (i = start; i < end; ++i) {
-			val = g_vec[colind[i]];
+			val = g_vector[colind[i]];
 			if (val != 0) {
 				if (val == -1) {
 					*g_colind = 0;
@@ -156,11 +162,80 @@ spmat* create_Ag(spmat* A, group* g, int nnz) {
 		*g_rp = cnt;
 		g_rp++;
 	}
+	reset_row(g_vector, A->n);
 	return Ag;
 }
 
+/*function for A*/
+void build_full_row(spmat* A, int* A_row, int row_num)
+{
+	int start, range, i;
+	ArrayMat *mat;
+	int *rp, *colind;
 
+	mat = (ArrayMat*) A->private;
+	rp = mat->rowptr;
+	colind = mat->colind;
+	start = rp[row_num];
+	colind += start;
+	range = rp[row_num+1] - start;
+	for (i = 0; i < range; ++i) {
+		A_row[*colind] = 1;
+		colind++;
+	}
+}
 
+int* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
+{
+	int ng, nnz, sumf, sum_norm, g_row, g_col, add, diag, max;
+	int *f, *f_ptr;
+	ELEM *ptr_row, *ptr_col;
+
+	ng = g->len;
+	f = (int*) malloc(sizeof(int)*(ng+2));
+	check_alloc(f);
+	f_ptr = f;
+	nnz = 0;
+	ptr_row = g->head;
+
+	for (; ptr_row != NULL; ptr_row = ptr_row->next) {
+		sumf = 0;
+		sum_norm = 0;
+		g_row = ptr_row->data;
+		build_full_row(A, A_row, g_row);
+		ptr_col = g->head;
+		for (; ptr_col != NULL; ptr_col = ptr_col->next) {
+			g_col = ptr_col->data;
+			if (A_row[g_col] == 1) {
+				nnz++;
+				add = M - ranks[g_row]*ranks[g_col];
+			}
+			else {
+				add = -(ranks[g_row]*ranks[g_col]);
+			}
+			sumf += add;
+			if (g_row != g_col) {
+				sum_norm += abs(add);
+			}
+		}
+		*f_ptr = sumf/M;
+		diag = (-ranks[g_row]*ranks[g_row])/M - (*f_ptr);
+		sum_norm = sum_norm/M + abs(diag);
+		f_ptr++;
+		if (ptr_row == g->head) {
+			max = sum_norm;
+		}
+		else {
+			if (sum_norm > max) {
+				max = sum_norm;
+			}
+		}
+	}
+	*f_ptr = max; /*this is 1-norm of B[g]_hat*/
+	*(f_ptr+1) = nnz; /*this is the number of non-zero elements in A[g]*/
+	reset_row(A_row, A->n);
+	return f;
+}
 
 
 

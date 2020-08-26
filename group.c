@@ -152,10 +152,9 @@ group** split_group(int* s, group* g)
 	return splited_g;
 }
 
-int* g_to_vector(group* g, int n)
+void g_to_vector(group* g, int* g_vector)
 {
 	int nodeNum;
-	int* g_vector;
 	int i;
 	int val;
 	int g_len;
@@ -163,7 +162,6 @@ int* g_to_vector(group* g, int n)
 
 	currNode = g->head;
 	g_len = g->len;
-	g_vector = (int*) calloc(n,sizeof(int));
 
 	for(i = 0; i < g_len; i++)
 	{
@@ -176,7 +174,6 @@ int* g_to_vector(group* g, int n)
 		g_vector[nodeNum] = val;
 		currNode = currNode->next;
 	}
-	return g_vector;
 }
 
 

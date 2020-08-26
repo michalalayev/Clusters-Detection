@@ -29,7 +29,7 @@ typedef struct
 
 group* create_group(ELEM* head, int len);
 group* initial_group(int n);
-int* g_to_vector(group* g, int n);
+void g_to_vector(group* g, int* g_vector);
 group** split_group(int* s, group* g);
 group* create_group_by_array(int *arr, int len);
 
