@@ -1,0 +1,7 @@
+.cproject
+.settings/org.eclipse.cdt.managedbuilder.core.prefs
+.project
+Debug/array_spmat.o
+Debug/errors.o
+*.o
+Debug/Project.exe

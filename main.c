@@ -14,10 +14,14 @@ int main (int argc, char* argv[])
 	char* filename;
 	spmat* A;
 	int* ranks;
+	int M;
+	ArrayMat *arr_mat;
 
 	argc += 0;
 	filename = argv[1];
 	A = create_A(filename);
-	ranks = get_ranks()
+	ranks = get_ranks();
+	arr_mat = (ArrayMat*) A->private;
+	rp = arr_mat->rowptr;
 
 }*/
