@@ -198,13 +198,45 @@ void check_build_full_row(char* filename) {
 
 }
 
+void check_calc_f_1norm_and_nnz(char* filename)
+{
+	spmat *A;
+	int *g_array;
+	ArrayMat *private_A;
+	int  *A_row, *ranks_vector, m , i;
+	group *g;
+	double *result;
+	g_array = (int*) malloc(sizeof(int)*5);
+	A = create_A(filename);
+	A_row = (int*) malloc(sizeof(int)*A->n);
+	g_array[0] = 1;
+	g_array[1] = 2;
+	g_array[2] = 4;
+	g_array[3] = 11;
+	g_array[4] = 12;
+	g = create_group_by_array(g_array, 5);
+	ranks_vector = get_ranks();
+	private_A = A->private;
+	m = private_A->rowptr[A->n];
+	printf("M = %d\n", m);
+	result = calc_f_1norm_and_nnz( A, A_row, g, ranks_vector, m);
+	for (i = 0; i < 5; ++i)
+	{
+		printf("%f ", result[i]);
+	}
+	printf("\n ");
+	printf("%f ",result[5]);
+	printf("%f ",result[6]);
+}
+
 int main (int argc, char* argv[]) {
 
 	char* filename;
 
 	argc += 0;
 	filename = argv[1];
-	check_build_full_row(filename);
+	/*check_build_full_row(filename);*/
+	check_calc_f_1norm_and_nnz(filename);
 
 	return 0;
 

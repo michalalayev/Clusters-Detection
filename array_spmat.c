@@ -3,6 +3,7 @@
 #include <assert.h>
 #include "spmat.h"
 #include "errors.h"
+#include <math.h>
 #include <string.h>
 
 /*typedef struct
@@ -186,14 +187,15 @@ void build_full_row(spmat* A, int* A_row, int row_num)
 	}
 }
 
-int* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
+double* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
 {
-	int ng, nnz, sumf, sum_norm, g_row, g_col, add, diag, max;
-	int *f, *f_ptr;
+	int ng, nnz, g_row, g_col;
+	double sumf, sum_norm, add, diag, max;
+	double *f, *f_ptr;
 	ELEM *ptr_row, *ptr_col;
 
 	ng = g->len;
-	f = (int*) malloc(sizeof(int)*(ng+2));
+	f = (double*) malloc(sizeof(double)*(ng+2));
 	check_alloc(f);
 	f_ptr = f;
 	nnz = 0;
@@ -214,14 +216,17 @@ int* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
 			else {
 				add = -(ranks[g_row]*ranks[g_col]);
 			}
+			printf("add = %f ", add);
 			sumf += add;
 			if (g_row != g_col) {
-				sum_norm += abs(add);
+				sum_norm += fabs(add);
 			}
 		}
+		printf("\n ");
 		*f_ptr = sumf/M;
 		diag = (-ranks[g_row]*ranks[g_row])/M - (*f_ptr);
-		sum_norm = sum_norm/M + abs(diag);
+		sum_norm = sum_norm/M + fabs(diag);
+		printf("sum_norm = %f ", sum_norm);
 		f_ptr++;
 		if (ptr_row == g->head) {
 			max = sum_norm;
