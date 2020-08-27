@@ -189,8 +189,8 @@ void build_full_row(spmat* A, int* A_row, int row_num)
 
 double* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
 {
-	int ng, nnz, g_row, g_col;
-	double sumf, sum_norm, add, diag, max;
+	int ng, nnz, g_row, g_col, add;
+	double sumf, sum_norm, diag, max;
 	double *f, *f_ptr;
 	ELEM *ptr_row, *ptr_col;
 
@@ -216,17 +216,14 @@ double* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
 			else {
 				add = -(ranks[g_row]*ranks[g_col]);
 			}
-			printf("add = %f ", add);
 			sumf += add;
 			if (g_row != g_col) {
-				sum_norm += fabs(add);
+				sum_norm += abs(add);
 			}
 		}
-		printf("\n ");
 		*f_ptr = sumf/M;
-		diag = (-ranks[g_row]*ranks[g_row])/M - (*f_ptr);
+		diag = (double) (-ranks[g_row]*ranks[g_row])/M - (*f_ptr);
 		sum_norm = sum_norm/M + fabs(diag);
-		printf("sum_norm = %f ", sum_norm);
 		f_ptr++;
 		if (ptr_row == g->head) {
 			max = sum_norm;

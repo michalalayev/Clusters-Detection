@@ -201,7 +201,7 @@ void check_build_full_row(char* filename) {
 void check_calc_f_1norm_and_nnz(char* filename)
 {
 	spmat *A;
-	int *g_array;
+	int *g_array, nnz;
 	ArrayMat *private_A;
 	int  *A_row, *ranks_vector, m , i;
 	group *g;
@@ -226,7 +226,8 @@ void check_calc_f_1norm_and_nnz(char* filename)
 	}
 	printf("\n ");
 	printf("%f ",result[5]);
-	printf("%f ",result[6]);
+	nnz = result[6];
+	printf("%d ",nnz);
 }
 
 int main (int argc, char* argv[]) {
@@ -235,7 +236,6 @@ int main (int argc, char* argv[]) {
 
 	argc += 0;
 	filename = argv[1];
-	/*check_build_full_row(filename);*/
 	check_calc_f_1norm_and_nnz(filename);
 
 	return 0;
