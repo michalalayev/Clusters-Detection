@@ -173,6 +173,7 @@ void build_full_row(spmat* A, int* A_row, int row_num)
 	ArrayMat *mat;
 	int *rp, *colind;
 
+	reset_row(A_row, A->n);
 	mat = (ArrayMat*) A->private;
 	rp = mat->rowptr;
 	colind = mat->colind;
@@ -233,7 +234,6 @@ int* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
 	}
 	*f_ptr = max; /*this is 1-norm of B[g]_hat*/
 	*(f_ptr+1) = nnz; /*this is the number of non-zero elements in A[g]*/
-	reset_row(A_row, A->n);
 	return f;
 }
 

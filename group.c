@@ -22,6 +22,8 @@ typedef struct
 	/*spmat* Ag;
 	int* ranks;*/
 /*} group;*/
+
+/*this function is only for our use, not for the project. can be deleted before submition*/
 group* create_group_by_array(int *arr, int len)
 {
 	int i;
@@ -47,6 +49,7 @@ group* create_group_by_array(int *arr, int len)
 	g->head = head;
 	return g;
 }
+
 group* create_group(ELEM* head, int len)
 {
 	group* g;

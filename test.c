@@ -177,7 +177,34 @@ void check_create_Ag(char* filename) {
 	}
 }
 
-int main () {
+void check_build_full_row(char* filename) {
+
+	spmat *A;
+	int* A_row;
+	int i, j;
+
+	A = create_A(filename);
+	A_row = (int*) calloc(A->n, sizeof(int));
+
+	for (j = 0; j < A->n; ++j) {
+		printf("j = %d  ",j);
+		build_full_row(A, A_row, j);
+		for (i = 0; i < A->n; ++i) {
+			printf("%d ", A_row[i]);
+		}
+		printf("\n");
+	}
+
+
+}
+
+int main (int argc, char* argv[]) {
+
+	char* filename;
+
+	argc += 0;
+	filename = argv[1];
+	check_build_full_row(filename);
 
 	return 0;
 
