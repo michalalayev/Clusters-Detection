@@ -46,12 +46,11 @@ void array_free(spmat *A)
 void array_mult(const spmat *A, const double *v, double *result)
 {
 	ArrayMat *arr_mat;
-	int *rp, *colind, *vals, n, i, j, a, b, nnz_in_row;
+	int *rp, *colind, n, i, j, a, b, nnz_in_row;
 	double sum;
 
 	arr_mat = (ArrayMat*) A->private;
 	rp = arr_mat->rowptr;
-	vals = arr_mat->values;
 	colind = arr_mat->colind;
 	n = A->n;
 	for(i = 0; i < n; ++i)
@@ -62,8 +61,7 @@ void array_mult(const spmat *A, const double *v, double *result)
 		sum = 0;
 		for (j = 0; j < nnz_in_row; ++j)
 		{
-			sum += (*vals) * (v[*colind]);
-			vals++;
+			sum += v[*colind];
 			colind++;
 		}
 		*result = sum;
@@ -187,17 +185,13 @@ void build_full_row(spmat* A, int* A_row, int row_num)
 	}
 }
 
-double* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
+/*f is a vector of len n+2, f[ng] = 1norm, f[ng+1] = nnz*/
+void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, double* f)
 {
-	int ng, nnz, g_row, g_col, add;
+	int nnz, g_row, g_col, add;
 	double sumf, sum_norm, diag, max;
-	double *f, *f_ptr;
 	ELEM *ptr_row, *ptr_col;
 
-	ng = g->len;
-	f = (double*) malloc(sizeof(double)*(ng+2));
-	check_alloc(f);
-	f_ptr = f;
 	nnz = 0;
 	ptr_row = g->head;
 
@@ -221,10 +215,10 @@ double* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
 				sum_norm += abs(add);
 			}
 		}
-		*f_ptr = sumf/M;
-		diag = (double) (-ranks[g_row]*ranks[g_row])/M - (*f_ptr);
+		*f = sumf/M;
+		diag = (double) (-ranks[g_row]*ranks[g_row])/M - (*f);
 		sum_norm = sum_norm/M + fabs(diag);
-		f_ptr++;
+		f++;
 		if (ptr_row == g->head) {
 			max = sum_norm;
 		}
@@ -234,9 +228,8 @@ double* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M)
 			}
 		}
 	}
-	*f_ptr = max; /*this is 1-norm of B[g]_hat*/
-	*(f_ptr+1) = nnz; /*this is the number of non-zero elements in A[g]*/
-	return f;
+	*f = max; /*this is 1-norm of B[g]_hat*/
+	*(f+1) = nnz; /*this is the number of non-zero elements in A[g]*/
 }
 
 

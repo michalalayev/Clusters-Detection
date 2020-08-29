@@ -37,7 +37,7 @@ spmat* spmat_allocate_array(int n, int nnz);
 void reset_row(int* row, int n);
 spmat* create_Ag(spmat* A, group* g, int nnz,  int* g_vector);
 void build_full_row(spmat* A, int* A_row, int row_num);
-double* calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M);
+void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, double* f);
 
 
 #endif
