@@ -50,11 +50,11 @@ group* create_group_by_array(int *arr, int len)
 	return g;
 }
 
-group* create_group(ELEM* head, int len)
+group* set_up_group(ELEM* head, int len)
 {
 	group* g;
 	g = (group*) malloc(sizeof(group));
-	/*### assert g != NULL ###*/
+	check_alloc(g);
 	g->head = head;
 	g->len = len;
 	return g;
@@ -104,7 +104,7 @@ group** split_group(int* s, group* g)
 		s++;
 	}
 	if (cnt1 == len) {
-		empty_group = create_group(NULL,0);
+		empty_group = set_up_group(NULL,0);
 		splited_g[0] = g;
 		splited_g[1] = empty_group;
 		return splited_g;
@@ -149,7 +149,7 @@ group** split_group(int* s, group* g)
 	last1->next = NULL;
 	last2->next = NULL;
 	g->len = cnt1;
-	g2 = create_group(head2, cnt2);
+	g2 = set_up_group(head2, cnt2);
 	splited_g[0] = g;
 	splited_g[1] = g2;
 	return splited_g;

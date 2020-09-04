@@ -255,8 +255,7 @@ void check_stack()
 	group *g,*g2,*g3;
 	stack* st;
 	int *arr, *arr2;
-	st = (stack*)malloc(sizeof(stack));
-	initialize(st);
+	st = initialize_stack();
 	printf("%d ",st->cnt);
 	printf("\n ");
 	arr = (int*) malloc(sizeof(int)*3);;
@@ -269,13 +268,12 @@ void check_stack()
 	printf("\n ");
 	printf("%d ",st->top->g->head->data);
 	printf("\n ");
-	arr2 = (int*) malloc(sizeof(int)*3);;
+	arr2 = (int*) malloc(sizeof(int)*2);
 	arr2[0] = 4;
 	arr2[2] = 5;
-	arr2[3] = 6;
-	g2 = create_group_by_array(arr2, 3);
+	g2 = create_group_by_array(arr2, 2);
 	push(g2,st);
-	printf("%d ",st->top->g->len);
+	printf("g2 len: %d ",st->top->g->len);
 	printf("\n ");
 	printf("%d ",st->top->g->head->data);
 	printf("\n ");
@@ -288,7 +286,14 @@ void check_stack()
 	printf("\n ");
 	printf("%d ",st->cnt);
 	printf("\n ");
-	printf("%d ",empty(st));
+	if (!empty(st)) {
+		printf("bi\n");
+	}
+	pop(st);
+	printf("%d\n",empty(st));
+	if (empty(st)) {
+		printf("hi");
+	}
 }
 
 void check_power_iteration(char* filename) {
@@ -329,17 +334,46 @@ void check_power_iteration(char* filename) {
 	printf("\neval = %f\n",eval);
 }
 
-int main (int argc, char* argv[]) {
+void check_fill_g_ranks(char* filename) {
 
-	char* filename;
-	/*spmat* Ag;
+	group* g;
+	int arr[8];
+	spmat* A;
+	int *ranks, *g_ranks, i, ng;
+
+	arr[0] = 0;
+	arr[1] = 2;
+	arr[2] = 3;
+	arr[3] = 7;
+	arr[4] = 10;
+	arr[5] = 11;
+	arr[6] = 12;
+	arr[7] = 19;
+
+	g = create_group_by_array(arr, 8);
+	A = create_A(filename);
+	ranks = get_ranks();
+	g_ranks = (int*) malloc(sizeof(int)*(A->n));
+	fill_g_ranks(g, ranks, g_ranks);
+	ng = g->len;
+	for (i = 0; i < ng; ++i) {
+		printf("%d ",g_ranks[i]);
+	}
+
+}
+
+/*int main () {*/ /*int argc, char* argv[]*/
+
+	/*char* filename;
+	spmat* Ag;
 	double *b, *res;
-	int ng, i;*/
+	int ng, i;
 
 	argc += 0;
 	filename = argv[1];
-	check_power_iteration(filename);
-	/*Ag = check_create_Ag(filename);
+	check_fill_g_ranks(filename);
+	check_stack();
+	Ag = check_create_Ag(filename);
 	ng = Ag->n;
 	printf("ng = %d\n", ng);
 	res = (double*) malloc(sizeof(double)*ng);
@@ -355,10 +389,10 @@ int main (int argc, char* argv[]) {
 	for (i = 0; i < ng; ++i)
 	{
 		printf("%f ", res[i]);
-	}*/
+	}
 
 	return 0;
 
-}
+}*/
 
 

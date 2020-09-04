@@ -44,9 +44,11 @@ spmat* create_A(char* filename)
 		*ranks_vec = rank;
 		ranks_vec++;
 		nodes = (int*) malloc(sizeof(int) * rank);
+		check_alloc(nodes);
 		k = fread(nodes, sizeof(int), rank, input);
 		check_fread(k,rank);
 		A->add_row(A, nodes, rank, i);
+		free(nodes);
 	}
 	ranks_vec -= n;
 	return A;

@@ -31,7 +31,7 @@ typedef struct {
 } stack;
 
 
-void initialize(stack *stk);
+stack* initialize_stack();
 void push(group *g, stack *stk);
 group* pop(stack *stk);
 group* top(const stack *stk);

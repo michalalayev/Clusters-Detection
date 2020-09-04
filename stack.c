@@ -1,9 +1,13 @@
 #include "stack.h"
 
-void initialize(stack *stk)
+stack* initialize_stack()
 {
-   stk -> cnt = 0;
-   stk -> top = NULL;
+	stack *stk;
+
+	stk = (stack*) malloc(sizeof(stack));
+	stk -> cnt = 0;
+	stk -> top = NULL;
+	return stk;
 }
 
 void push(group *g, stack *stk)

@@ -143,7 +143,7 @@ double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, d
 	x = x/M;
 	norm1 = f[ng];
 
-	for (i = 0; i < ng; ++i) { /*calculate Bg_hat mult u (Au)*/
+	for (i = 0; i < ng; ++i) { /*calculate Bg_hat mult u (the result is Au)*/
 		curr = *u;
 		next = *result - x*(*g_ranks) - (*f)*curr + norm1*curr;
 		*Au = next;

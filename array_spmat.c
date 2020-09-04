@@ -134,6 +134,7 @@ spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector)
 	mat = (ArrayMat*) A->private;
 	rp = mat->rowptr;
 	colind = mat->colind;
+	reset_row(g_vector, A->n);
 	g_to_vector(g, g_vector);
 	Ag = spmat_allocate_array(len, nnz);
 	g_mat = (ArrayMat*) Ag->private;
@@ -161,7 +162,7 @@ spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector)
 		*g_rp = cnt;
 		g_rp++;
 	}
-	reset_row(g_vector, A->n);
+	/*reset_row(g_vector, A->n);*/
 	return Ag;
 }
 
@@ -232,7 +233,17 @@ void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, dou
 	*(f+1) = nnz; /*this is the number of non-zero elements in A[g]*/
 }
 
+/*move to other module later*/
+void fill_g_ranks(group* g, int* ranks, int* g_ranks)
+{
+	ELEM* node;
 
+	node = g->head;
+	for (; node != NULL; node = node->next) {
+		*g_ranks = ranks[node->data];
+		g_ranks++;
+	}
+}
 
 
 
