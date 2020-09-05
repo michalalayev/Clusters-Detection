@@ -16,5 +16,7 @@ double mult_vectors_int_and_double(int* vec1, double* vec2, int n);
 double mult_vectors_double(double* vec1, double* vec2, int n);
 void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, double* b_curr, double* b_next);
 double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, double* f, double* u, double* Au);
+void power_iteration2(spmat* Ag, int M, int* g_ranks, double* f, double* b_curr, double* b_next);
+double calc_deltaQ(spmat* Ag, int* result, int* s, int* g_ranks, int M, double* f);
 
 #endif /* MULT_H_ */

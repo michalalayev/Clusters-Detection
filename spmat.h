@@ -21,8 +21,11 @@ typedef struct _spmat {
 	/* Frees all resources used by A */
 	void	(*free)(struct _spmat *A);
 
-	/* Multiplies matrix A by vector v, into result (result is pre-allocated) */
-	void	(*mult)(const struct _spmat *A, const double *v, double *result);
+	/* Multiplies matrix A by vector v of ints, into result (result is pre-allocated) */
+	void	(*mult_int)(const struct _spmat *A, const int *v, int *result);
+
+	/* Multiplies matrix A by vector v of doubles, into result (result is pre-allocated) */
+	void	(*mult_double)(const struct _spmat *A, const double *v, double *result);
 
 	/* Private field for inner implementation.
 	 * Should not be read or modified externally */
@@ -39,5 +42,6 @@ spmat* create_Ag(spmat* A, group* g, int nnz,  int* g_vector);
 void build_full_row(spmat* A, int* A_row, int row_num);
 void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, double* f);
 void fill_g_ranks(group* g, int* ranks, int* g_ranks); /*move to other module later*/
+double array_mult_double2(const spmat *A, const double *v, int i);
 
 #endif

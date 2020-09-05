@@ -70,7 +70,7 @@ void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, 
 		cnt++;
 		done = 1; /*assume it's true*/
 		magn = 0;
-		Ag->mult(Ag, b_curr, result);
+		Ag->mult_double(Ag, b_curr, result);
 		x = mult_vectors_int_and_double(g_ranks, b_curr, ng);
 		x = x/M;
 		for (i = 0; i < ng; ++i) { /*calculate the i element in b_next vector*/
@@ -128,6 +128,82 @@ void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, 
 	/*printf("cnt = %d\n",cnt);*/
 }
 
+void power_iteration2(spmat* Ag, int M, int* g_ranks, double* f, double* b_curr, double* b_next)
+{
+	double x, curr, next, magn, norm1, result;
+	double *b_curr_start, *b_next_start, *f_start, *tmp;
+	int ng, i, done, cnt;
+	int *g_ranks_start;
+
+	ng = Ag->n;
+	norm1 = f[ng];
+	b_curr_start = b_curr;
+	b_next_start = b_next;
+	f_start = f;
+	g_ranks_start = g_ranks;
+	done = 0; /*false*/
+	cnt = 0;
+	while (done == 0) {
+		cnt++;
+		done = 1; /*assume it's true*/
+		magn = 0;
+
+		x = mult_vectors_int_and_double(g_ranks, b_curr, ng);
+		x = x/M;
+		for (i = 0; i < ng; ++i) { /*calculate the i element in b_next vector*/
+			curr = *b_curr;
+			/*if(cnt == 1) {
+				printf("curr = %f\n",curr);
+			}*/
+			result = array_mult_double2(Ag, b_curr_start, i);
+			next = result - x*(*g_ranks) - (*f)*curr + norm1*curr;
+			/*if(cnt == 1) {
+				printf("next = %f\n",next);
+				printf("result = %f, x = %f, g_ranks = %d, f = %f, norm1 = %f\n",result,x,*g_ranks,*f,norm1);
+			}*/
+			magn += (next*next);
+			/*if (cnt == 1) {
+				printf("magn = %f, next*next = %f\n", magn, next*next);
+			}*/
+			*b_next = next;
+			b_next++;
+			g_ranks++;
+			f++;
+			b_curr++;
+		} /*b_next is fully calculated now*/
+		/*if (cnt == 1) {
+			printf("magn = %f\n",magn);
+		}*/
+		f = f_start;
+		g_ranks = g_ranks_start;
+		b_next = b_next_start;
+		b_curr = b_curr_start;
+		/*standartize b_next:*/
+		magn = sqrt(magn);
+		for (i = 0; i < ng; ++i){
+			*b_next /= magn;
+			if (done != 0 && fabs(*b_next - *b_curr) > epsilon)
+			{
+				done = 0; /*false, we are not done*/
+			}
+			b_next++;
+			b_curr++;
+		}
+		/*switch between the vectors:*/
+		tmp = b_curr_start;
+		b_curr = b_next_start;
+		b_next = tmp;
+		b_curr_start = b_curr;
+		b_next_start = b_next;
+		/*printf("b_curr:\n");
+		for (i = 0; i < ng; ++i) {
+			printf("%f ",b_curr[i]);
+		}
+		printf("\n");*/
+	}
+	/*printf("cnt = %d\n",cnt);*/
+}
+
 /*u is the leading eigenvector of Bg, it is saved on the memory allocated for b_curr*/
 double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, double* f, double* u, double* Au)
 {
@@ -137,7 +213,7 @@ double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, d
 	Au_start = Au;
 	u_start = u;
 	ng = Ag->n;
-	Ag->mult(Ag, u, result);
+	Ag->mult_double(Ag, u, result);
 
 	x = mult_vectors_int_and_double(g_ranks, u, ng);
 	x = x/M;
@@ -163,8 +239,25 @@ double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, d
 }
 
 
+double calc_deltaQ(spmat* Ag, int* result, int* s, int* g_ranks, int M, double* f)
+{
+	double x, deltaQ;
+	int ng, i;
 
-
+	ng = Ag->n;
+	x = mult_vectors_int(s, g_ranks, ng);
+	x /= M;
+	Ag->mult_int(Ag, s, result);
+	deltaQ = 0;
+	for (i = 0; i < ng; ++i) {
+		deltaQ += ( (*result - x*(*g_ranks) - (*f)*(*s)) * (*s) );
+		result++;
+		g_ranks++;
+		f++;
+		s++;
+	}
+	return deltaQ;
+}
 
 
 

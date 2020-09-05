@@ -13,7 +13,7 @@
 #include "stack.h"
 #include "mult.h"
 
-
+/*
 int main (int argc, char* argv[])
 {
 	char* filename;
@@ -77,4 +77,4 @@ int main (int argc, char* argv[])
 
 	return 0;
 }
-
+*/

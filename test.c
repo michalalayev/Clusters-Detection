@@ -6,6 +6,8 @@
 #include "group.h"
 #include "stack.h"
 #include "mult.h"
+#include <time.h>
+#include "optimization.h"
 
 void check_nnz(const char* filename, int n) {
 	int test,res;
@@ -151,12 +153,13 @@ spmat* check_create_Ag(char* filename) {
 	ArrayMat *g_mat, *A_mat;
 	int *g_rp, *g_colind, i, *A_rp, *g_vector;
 
-	g = initial_group(4);
+	g = initial_group(5);
 	node = g->head;
-	node->data = 3;
-	node->next->data = 7;
-	node->next->next->data = 8;
-	node->next->next->next->data = 12;
+	node->data = 1;
+	node->next->data = 2;
+	node->next->next->data = 4;
+	node->next->next->next->data = 11;
+	node->next->next->next->next->data = 12;
 	printf("g:\n");
 	for(i = 0; i < 4; ++i )
 	{
@@ -174,7 +177,7 @@ spmat* check_create_Ag(char* filename) {
 
 	g_vector = (int*) calloc(20,sizeof(int));
 	assert(g_vector != NULL);
-	Ag = create_Ag(A, g, 4, g_vector);
+	Ag = create_Ag(A, g, 6, g_vector);
 
 	g_mat = (ArrayMat*) Ag->private;
 	g_rp = g_mat->rowptr;
@@ -215,23 +218,17 @@ void check_build_full_row(char* filename) {
 void check_calc_f_1norm_and_nnz(char* filename)
 {
 	spmat *A;
-	int *g_array, nnz;
+	int nnz;
 	ArrayMat *private_A;
 	int  *A_row, *ranks_vector, m , i, size;
 	group *g;
 	double *f;
 
-	size = 5;
-	g_array = (int*) malloc(sizeof(int)*size);
-	f = (double*) malloc(sizeof(double)*(size+2));
 	A = create_A(filename);
+	size = A->n;
+	f = (double*) malloc(sizeof(double)*(size+2));
 	A_row = (int*) malloc(sizeof(int)*A->n);
-	g_array[0] = 1;
-	g_array[1] = 2;
-	g_array[2] = 4;
-	g_array[3] = 11;
-	g_array[4] = 12;
-	g = create_group_by_array(g_array, size);
+	g = initial_group(A->n);
 	ranks_vector = get_ranks();
 	private_A = A->private;
 	m = private_A->rowptr[A->n];
@@ -246,7 +243,7 @@ void check_calc_f_1norm_and_nnz(char* filename)
 	nnz = f[size+1];
 	printf("%d ",nnz);
 
-	free(g_array);
+	free(A_row);
 	free(f);
 }
 
@@ -302,13 +299,12 @@ void check_power_iteration(char* filename) {
 	int *ranks, *A_row;
 	ArrayMat *arr_mat;
 	int i, n, M;
-	double *f, *v, *result, *v_next, eval;
+	double *f, *v, *result, *v_next/*, eval*/;
 	group* g;
 
 	A = create_A(filename);
-	print_A(A,2);
-	ranks = get_ranks();
 	n = A->n;
+	ranks = get_ranks();
 	arr_mat = (ArrayMat*) A->private;
 	M = arr_mat->rowptr[n];
 	f = (double*) malloc(sizeof(double)*(n+2));
@@ -321,17 +317,54 @@ void check_power_iteration(char* filename) {
 	}
 	g = initial_group(n);
 	calc_f_1norm_and_nnz(A, A_row, g, ranks, M, f);
-	printf("f:\n");
+	/*printf("f:\n");
 	for (i = 0; i < n+2; ++i) {
 		printf("%f ",f[i]);
 	}
-	printf("\n");
+	printf("\n");*/
 	power_iteration(A, result, M, ranks, f, v, v_next);
 	for (i = 0; i < n; ++i) {
 		printf("%f ",v[i]);
 	}
+	/*eval = calc_leading_eigenvalue(A, result, M, ranks, f, v, v_next);
+	printf("\neval = %f\n",eval);*/
+}
+
+void check_power_iteration2(char* filename) {
+
+	spmat* A;
+	int *ranks, *A_row;
+	ArrayMat *arr_mat;
+	int i, n, M;
+	double *f, *v, *v_next;
+	group* g;
+
+	A = create_A(filename);
+	n = A->n;
+	ranks = get_ranks();
+
+	arr_mat = (ArrayMat*) A->private;
+	M = arr_mat->rowptr[n];
+	f = (double*) malloc(sizeof(double)*(n+2));
+	A_row = (int*) malloc(sizeof(int)*n);
+	v = (double*) malloc(sizeof(double)*n);
+	v_next = (double*) malloc(sizeof(double)*n);
+	for (i = 0; i < n; ++i) {
+		v[i] = i+3;
+	}
+	g = initial_group(n);
+	calc_f_1norm_and_nnz(A, A_row, g, ranks, M, f);
+	/*printf("f:\n");
+	for (i = 0; i < n+2; ++i) {
+		printf("%f ",f[i]);
+	}
+	printf("\n");*/
+	power_iteration2(A, M, ranks, f, v, v_next);
+	/*for (i = 0; i < n; ++i) {
+		printf("%f ",v[i]);
+	}
 	eval = calc_leading_eigenvalue(A, result, M, ranks, f, v, v_next);
-	printf("\neval = %f\n",eval);
+	printf("\neval = %f\n",eval);*/
 }
 
 void check_fill_g_ranks(char* filename) {
@@ -362,17 +395,102 @@ void check_fill_g_ranks(char* filename) {
 
 }
 
-/*int main () {*/ /*int argc, char* argv[]*/
+void check_calc_score(char* filename) {
 
-	/*char* filename;
-	spmat* Ag;
-	double *b, *res;
-	int ng, i;
+	/*double score;*/
+	int *s, *ranks, *row, *unmoved, *indices;
+	int M, i, n;
+	spmat* A;
+	ArrayMat* arr_mat;
+
+	A = create_A(filename);
+	n = A->n;
+	ranks = get_ranks();
+	arr_mat = (ArrayMat*) A->private;
+	M = arr_mat->rowptr[n];
+
+	s = (int*) malloc(sizeof(int)*n);
+	row = (int*) malloc(sizeof(int)*n);
+	unmoved = (int*) malloc(sizeof(int)*n);
+	indices = (int*) malloc(sizeof(int)*n);
+	for (i = 0; i < n; ++i) {
+		s[i] = 1;
+	}
+	s[1] = -1;
+
+	/*for (i = 0; i < n; ++i) {
+		score = calc_score(s, A, ranks, M, i, row);
+		printf("score[%d] = %f\n", i,score);
+	}*/
+	modularity_maximization(s, unmoved, indices, ranks, A, M, row);
+	for (i = 0; i < n; ++i) {
+		printf("s[%d] = %d\n", i,s[i]);
+	}
+}
+
+void check_calc_deltaQ(char* filename) {
+
+	double *f, nnz, deltaQ;
+	int *s, *ranks, *result, *A_row, arr[5], *g_ranks;
+	int M, i, n, ng;
+	spmat *A, *Ag;
+	ArrayMat* arr_mat;
+	group* g;
+
+	A = create_A(filename);
+	n = A->n;
+	ranks = get_ranks();
+	arr_mat = (ArrayMat*) A->private;
+	M = arr_mat->rowptr[n];
+
+	arr[0] = 1;
+	arr[1] = 2;
+	arr[2] = 4;
+	arr[3] = 11;
+	arr[4] = 12;
+
+	s = (int*) malloc(sizeof(int)*n);
+	g_ranks = (int*) malloc(sizeof(int)*n);
+	result = (int*) malloc(sizeof(int)*n);
+	A_row = (int*) malloc(sizeof(int)*n);
+	f = (double*) malloc(sizeof(double)*(n+2));
+	g = create_group_by_array(arr, 5);
+	ng = g->len;
+	for (i = 0; i < ng; ++i) {
+		s[i] = 1;
+	}
+	s[ng-1] = -1;
+
+	calc_f_1norm_and_nnz(A, A_row, g, ranks, M, f);
+	nnz = f[ng+1];
+	Ag = create_Ag(A, g, nnz, A_row);
+	fill_g_ranks(g, ranks, g_ranks);
+	deltaQ = calc_deltaQ(Ag, result, s, g_ranks, M, f);
+	printf("%f",deltaQ);
+}
+
+
+
+int main (int argc, char* argv[]) {
+
+	char* filename;
 
 	argc += 0;
 	filename = argv[1];
-	check_fill_g_ranks(filename);
-	check_stack();
+	check_calc_deltaQ(filename);
+
+	/*clock_t start,end;
+	srand(time(NULL));
+	argc += 0;
+	filename = argv[1];
+	start = clock();
+	for (i = 0; i < 20; ++i) {
+		check_power_iteration(filename);
+	}
+	end = clock();
+	printf("\nExecution took %f seconds\n", ((double)(end-start) / CLOCKS_PER_SEC));*/
+
+	/*check_stack();
 	Ag = check_create_Ag(filename);
 	ng = Ag->n;
 	printf("ng = %d\n", ng);
@@ -389,10 +507,10 @@ void check_fill_g_ranks(char* filename) {
 	for (i = 0; i < ng; ++i)
 	{
 		printf("%f ", res[i]);
-	}
+	}*/
 
 	return 0;
 
-}*/
+}
 
 
