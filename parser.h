@@ -1,10 +1,3 @@
-/*
- * parser.h
- *
- *  Created on: 18 ???? 2020
- *      Author: Michal
- */
-
 #ifndef PARSER_H_
 #define PARSER_H_
 

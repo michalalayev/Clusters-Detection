@@ -285,7 +285,7 @@ void build_full_row(spmat* A, int* A_row, int row_num)
 	}
 }
 
-/*f is a vector of len n+2, f[ng] = 1norm, f[ng+1] = nnz*/
+/*f is a vector of len ng+2, f[ng] = 1-norm, f[ng+1] = nnz*/
 void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, double* f)
 {
 	int nnz, g_row, g_col, add;

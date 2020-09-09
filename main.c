@@ -1,9 +1,3 @@
-/*
- * main.c
- *
- *  Created on: 18 ???? 2020
- *      Author: Michal
- */
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
