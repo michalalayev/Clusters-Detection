@@ -37,5 +37,6 @@ group* pop(stack *stk);
 group* top(const stack *stk);
 boolean empty(const stack *stk);
 boolean full(const stack *stk);
+void put_groups_in_stacks(group** splited_g, stack* P, stack* O);
 
 #endif /* STACK_H_ */

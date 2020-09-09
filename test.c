@@ -299,7 +299,7 @@ void check_power_iteration(char* filename) {
 	int *ranks, *A_row;
 	ArrayMat *arr_mat;
 	int i, n, M;
-	double *f, *v, *result, *v_next/*, eval*/;
+	double *f, *v, *result, *v_next, eval;
 	group* g;
 
 	A = create_A(filename);
@@ -312,9 +312,10 @@ void check_power_iteration(char* filename) {
 	v = (double*) malloc(sizeof(double)*n);
 	v_next = (double*) malloc(sizeof(double)*n);
 	result = (double*) malloc(sizeof(double)*n);
-	for (i = 0; i < n; ++i) {
+	/*for (i = 0; i < n; ++i) {
 		v[i] = i+3;
-	}
+	}*/
+	create_random_vector(v, n);
 	g = initial_group(n);
 	calc_f_1norm_and_nnz(A, A_row, g, ranks, M, f);
 	/*printf("f:\n");
@@ -326,8 +327,8 @@ void check_power_iteration(char* filename) {
 	for (i = 0; i < n; ++i) {
 		printf("%f ",v[i]);
 	}
-	/*eval = calc_leading_eigenvalue(A, result, M, ranks, f, v, v_next);
-	printf("\neval = %f\n",eval);*/
+	eval = calc_leading_eigenvalue(A, result, M, ranks, f, v, v_next);
+	printf("\neval = %f\n",eval);
 }
 
 void check_power_iteration2(char* filename) {
@@ -336,7 +337,7 @@ void check_power_iteration2(char* filename) {
 	int *ranks, *A_row;
 	ArrayMat *arr_mat;
 	int i, n, M;
-	double *f, *v, *v_next;
+	double *f, *v, *v_next, eval;
 	group* g;
 
 	A = create_A(filename);
@@ -360,11 +361,48 @@ void check_power_iteration2(char* filename) {
 	}
 	printf("\n");*/
 	power_iteration2(A, M, ranks, f, v, v_next);
-	/*for (i = 0; i < n; ++i) {
+	for (i = 0; i < n; ++i) {
 		printf("%f ",v[i]);
 	}
-	eval = calc_leading_eigenvalue(A, result, M, ranks, f, v, v_next);
-	printf("\neval = %f\n",eval);*/
+	eval = calc_leading_eigenvalue2(A, M, ranks, f, v, v_next);
+	printf("\neval = %f\n",eval);
+}
+
+void check_power_iteration3(char* filename) {
+
+	spmat* A;
+	int *ranks, *A_row;
+	ArrayMat *arr_mat;
+	int i, n, M;
+	double *f, *v, *v_next, eval;
+	group* g;
+
+	A = create_A(filename);
+	n = A->n;
+	ranks = get_ranks();
+
+	arr_mat = (ArrayMat*) A->private;
+	M = arr_mat->rowptr[n];
+	f = (double*) malloc(sizeof(double)*(n+2));
+	A_row = (int*) malloc(sizeof(int)*n);
+	v = (double*) malloc(sizeof(double)*n);
+	v_next = (double*) malloc(sizeof(double)*n);
+	for (i = 0; i < n; ++i) {
+		v[i] = i+3;
+	}
+	g = initial_group(n);
+	calc_f_1norm_and_nnz(A, A_row, g, ranks, M, f);
+	/*printf("f:\n");
+	for (i = 0; i < n+2; ++i) {
+		printf("%f ",f[i]);
+	}
+	printf("\n");*/
+	power_iteration3(A, M, ranks, f, v, v_next);
+	for (i = 0; i < n; ++i) {
+		printf("%f ",v[i]);
+	}
+	eval = calc_leading_eigenvalue3(A, M, ranks, f, v, v_next);
+	printf("\neval = %f\n",eval);
 }
 
 void check_fill_g_ranks(char* filename) {
@@ -466,23 +504,62 @@ void check_calc_deltaQ(char* filename) {
 	Ag = create_Ag(A, g, nnz, A_row);
 	fill_g_ranks(g, ranks, g_ranks);
 	deltaQ = calc_deltaQ(Ag, result, s, g_ranks, M, f);
-	printf("%f",deltaQ);
+	printf("1: %f\n",deltaQ);
+	deltaQ = calc_deltaQ2(Ag, s, g_ranks, M, f);
+	printf("2: %f\n",deltaQ);
+	deltaQ = calc_deltaQ3(Ag, s, g_ranks, M, f);
+	printf("3: %f\n",deltaQ);
+}
+
+void check_output_groups(char* input_filename, char* output_filename)
+{
+	spmat* A;
+	int n, *arr, *s, i;
+	stack* stk;
+	group** gs, *g, *g1, *g2;
+
+	stk = initialize_stack();
+	A = create_A(input_filename);
+	n = A->n;
+	g = initial_group(n);
+	s = (int*) malloc(sizeof(int)*n);
+	for (i = 0; i < n; i+=2) {
+		s[i] = 1;
+	}
+	for (i = 1; i < n; i+=2) {
+		s[i] = -1;
+	}
+	gs = split_group(s, g);
+	g1 = gs[0];
+	g2 = gs[1];
+	push(g2, stk);
+	push(g1, stk);
+	arr = (int*) malloc(sizeof(int)*n);
+	output_groups(output_filename, stk, arr);
+	free(arr);
+	free(s);
 }
 
 
 
 int main (int argc, char* argv[]) {
 
-	char* filename;
+	int* arr, i;
+	FILE* in;
 
 	argc += 0;
-	filename = argv[1];
-	check_calc_deltaQ(filename);
+	check_output_groups(argv[1], argv[2]);
+	arr = (int*) malloc(sizeof(int)*24);
+	in = fopen(argv[2],"r");
+	fread(arr, sizeof(int), 24, in);
+	for (i = 0; i < 24; ++i) {
+		printf("%d ",arr[i]);
+	}
 
 	/*clock_t start,end;
-	srand(time(NULL));
 	argc += 0;
 	filename = argv[1];
+	srand(time(NULL));
 	start = clock();
 	for (i = 0; i < 20; ++i) {
 		check_power_iteration(filename);

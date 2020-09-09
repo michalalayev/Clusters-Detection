@@ -1,8 +1,7 @@
-#include "spmat.h"
 #include "parser.h"
 #include "errors.h"
+#include "group.h"
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -50,11 +49,61 @@ spmat* create_A(char* filename)
 		A->add_row(A, nodes, rank, i);
 		free(nodes);
 	}
+	fclose(input);
 	ranks_vec -= n;
 	return A;
 }
 
 int* get_ranks() {
 	return ranks_vec;
+}
+
+
+/* This function receives a stack of groups, outputs them in ascending order to the output file named filename,
+ * and frees the allocated memory of the stack and the groups.
+ * arr is an array of length n, the nodes of the groups are saved there before they are written to the file*/
+void output_groups(char* filename, stack* stk, int* arr)
+{
+	FILE* output;
+	int num_of_groups, k, i, j, len;
+	int *arr_start;
+	group* g;
+	ELEM *head, *node;
+
+	arr_start = arr;
+	output = fopen(filename, "w");
+	num_of_groups = stk->cnt;
+	k = fwrite(&num_of_groups, sizeof(int), 1, output);
+	check_fwrite(k,1);
+
+	for (i = 0; i < num_of_groups; ++i) {
+		g = pop(stk);
+		len = g->len;
+		if (num_of_groups != 1) {
+			*arr = len;
+			arr++;
+		}
+		head = g->head;
+		for (j = 0; j < len; ++j) {
+			node = head;
+			head = head->next;
+			*arr = node->data;
+			arr++;
+			free(node);
+		}
+		free(g);
+		arr = arr_start;
+		if (num_of_groups != 1) {
+			k = fwrite(arr, sizeof(int), len+1, output);
+			check_fwrite(k,len+1);
+		}
+		else {
+			k = fwrite(&len, sizeof(int), 1, output);
+			check_fwrite(k,1);
+			k = fwrite(arr, sizeof(int), len, output);
+			check_fwrite(k,len);
+		}
+	}
+	fclose(output);
 }
 

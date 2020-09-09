@@ -116,6 +116,33 @@ void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, s
 }
 
 
+void fill_with_ones(int* s, int len)
+{
+	int i;
+
+	for (i = 0; i < len; ++i)
+	{
+		*s = 1;
+		s++;
+	}
+}
+
+void create_s(int* s, double* v, int len)
+{
+	int i;
+
+	for (i = 0; i < len; ++i) {
+		if (IS_POSITIVE(*v)) {
+			*s = 1;
+		}
+		else {
+			*s = (-1);
+		}
+		v++;
+		s++;
+	}
+}
+
 
 
 

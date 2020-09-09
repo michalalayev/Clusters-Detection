@@ -116,6 +116,53 @@ double array_mult_double2(const spmat *A, const double *v, int i)
 	return sum;
 }
 
+double array_mult_double3(const double *v, int *colind, int nnz_in_row)
+{
+	int i;
+	double sum;
+
+	sum = 0;
+	for (i = 0; i < nnz_in_row; ++i)
+	{
+		sum += v[*colind];
+		colind++;
+	}
+	return sum;
+}
+
+/*i is the index of row in A that we want to mult by v*/
+int array_mult_int2(const spmat *A, const int *v, int i)
+{
+	ArrayMat *arr_mat;
+	int *rp, *colind, j, nnz_in_row;
+	int sum;
+
+	arr_mat = (ArrayMat*) A->private;
+	rp = arr_mat->rowptr;
+	colind = arr_mat->colind;
+	colind += rp[i];
+	nnz_in_row = rp[i+1]-rp[i];
+	sum = 0;
+	for (j = 0; j < nnz_in_row; ++j)
+	{
+		sum += v[*colind];
+		colind++;
+	}
+	return sum;
+}
+
+int array_mult_int3(const int *v, int *colind, int nnz_in_row)
+{
+	int i, sum;
+
+	sum = 0;
+	for (i = 0; i < nnz_in_row; ++i)
+	{
+		sum += v[*colind];
+		colind++;
+	}
+	return sum;
+}
 
 
 spmat* spmat_allocate_array(int n, int nnz)

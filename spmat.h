@@ -37,11 +37,17 @@ spmat* spmat_allocate_list(int n); */
 
 /* Allocates a new arrays sparse matrix of size n with nnz non-zero elements */
 spmat* spmat_allocate_array(int n, int nnz);
+
 void reset_row(int* row, int n);
-spmat* create_Ag(spmat* A, group* g, int nnz,  int* g_vector);
+spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector);
 void build_full_row(spmat* A, int* A_row, int row_num);
 void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, double* f);
 void fill_g_ranks(group* g, int* ranks, int* g_ranks); /*move to other module later*/
+
 double array_mult_double2(const spmat *A, const double *v, int i);
+double array_mult_double3(const double *v, int *colind, int nnz_in_row);
+
+int array_mult_int2(const spmat *A, const int *v, int i);
+int array_mult_int3(const int *v, int *colind, int nnz_in_row);
 
 #endif

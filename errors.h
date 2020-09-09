@@ -12,6 +12,8 @@
 
 void check_alloc(void* ptr);
 void check_fread(int read, int exp);
+void check_fwrite(int written, int exp);
 void check_fopen(FILE* input);
+void check_M(int M);
 
 #endif /* ERRORS_H_ */

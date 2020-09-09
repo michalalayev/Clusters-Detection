@@ -48,3 +48,32 @@ boolean full(const stack *stk)
 {
    return ((boolean) (stk -> cnt == FULL));
 }
+
+void put_groups_in_stacks(group** splited_g, stack* P, stack* O)
+{
+	group *g1, *g2;
+
+	g1 = splited_g[0];
+	g2 = splited_g[1];
+	free(splited_g);
+
+	if (g2->len == 0) { /*g2 is empty, and g1 is the full g*/
+		push(g1, O);
+		free(g2);
+	}
+	else {
+		if (g2->len == 1) {
+			push(g2, O);
+		}
+		else {
+			push(g2, P);
+		}
+		if (g1->len == 1) {
+			push(g1, O);
+		}
+		else {
+			push(g1, P);
+		}
+	}
+}
+

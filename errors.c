@@ -1,9 +1,3 @@
-/*
- * errors.c
- *
- *  Created on: 23 ???? 2020
- *      Author: Michal
- */
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -21,6 +15,13 @@ void check_fread(int read, int exp) {
 	}
 }
 
+void check_fwrite(int written, int exp) {
+	if (written != exp) {
+		fprintf(stderr,"The number of elements written by fwrite is incorrect\n");
+		exit(1);
+	}
+}
+
 void check_fopen(FILE* input) {
 	if (input == NULL) {
 		fprintf(stderr,"Couldn't open file, No such file or directory\n");
@@ -28,3 +29,9 @@ void check_fopen(FILE* input) {
 	}
 }
 
+void check_M(int M) {
+	if (M == 0) {
+		fprintf(stderr,"M equals 0, matrix B is not defined\n");
+		exit(1);
+	}
+}

@@ -6,32 +6,37 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "parser.h"
 #include "spmat.h"
 #include "errors.h"
 #include "group.h"
 #include "stack.h"
 #include "mult.h"
+#include "optimization.h"
 
-/*
+#define IS_POSITIVE(X) ((X) > 0.00001)
+
 int main (int argc, char* argv[])
 {
-	char* filename;
+	char *input, *output;
 	spmat *A, *Ag;
-	int *ranks, *g_ranks, *A_row, *s; //A_row is also for g_vec
-	double *f, *b_curr, *b_next, *result, eigen_val;
+	int *ranks, *g_ranks, *A_row, *s, *tmp; //A_row is also for g_vec
+	double *f, *b_curr, *b_next, *result, eigen_val, deltaQ;
 	int n, M, first_partition, ng;
 	ArrayMat *arr_mat;
-	group *initial_g, *g;
+	group *initial_g, *g, **splited_g;
 	stack *P, *O;
 
+	srand(time(NULL));
 	argc += 0;
-	filename = argv[1];
-	A = create_A(filename);
+	input = argv[1];
+	A = create_A(input);
 	ranks = get_ranks();
 	n = A->n;
 	arr_mat = (ArrayMat*) A->private;
 	M = arr_mat->rowptr[n];
+	check_M(M);
 	g_ranks = (int*) malloc(sizeof(int)*n);
 	check_alloc(g_ranks);
 	A_row = (int*) calloc(n,sizeof(int));
@@ -58,23 +63,46 @@ int main (int argc, char* argv[])
 	{
 		g = pop(P);
 		calc_f_1norm_and_nnz(A, A_row, g, ranks, M, f);
-		//create initial b_curr here//
+		ng = g->len;
+		create_random_vector(b_curr, ng);
 		if (first_partition) {
-			first_partition = 0;
-			power_iteration(A, result, M, ranks, f, b_curr, b_next); //after this b_curr contains the leading eigenvector
-			eigen_val = calc_leading_eigenvalue(A, result, M, ranks, f, b_curr, b_next); //eigen_val is the leading eigenvalue
+			Ag = A;
+			tmp = g_ranks;
+			g_ranks = ranks;
 		}
 		else {
-			ng = g->len;
 			Ag = create_Ag(A, g, f[ng+1], A_row);
 			fill_g_ranks(g, ranks, g_ranks);
-			power_iteration(Ag, result, M, g_ranks, f, b_curr, b_next);
-			eigen_val = calc_leading_eigenvalue(Ag, result, M, g_ranks, f, b_curr, b_next);
 		}
+		power_iteration(Ag, result, M, g_ranks, f, b_curr, b_next); //after this b_curr contains the leading eigenvector
+		eigen_val = calc_leading_eigenvalue(Ag, result, M, g_ranks, f, b_curr, b_next); //eigen_val is the leading eigenvalue
+		if (!IS_POSITIVE(eigen_val)) {
+			fill_with_ones(s, ng);
+		}
+		else {
+			create_s(s, b_curr, ng);
+			deltaQ = calc_deltaQ(Ag, int* result_int, s, g_ranks, M, f);
+			if (!IS_POSITIVE(deltaQ)) {
+				fill_with_ones(s, ng);
+			}
+		}
+		modularity_maximization(s, int* unmoved, int* indices, g_ranks, Ag, M, int* row);
+		splited_g = split_group(s, g);
+		put_groups_in_stacks(splited_g, P, O);
 
+		if (first_partition) {
+			g_ranks = tmp;
+			first_partition = 0;
+		}
 	}
 
+	output = argv[2];
+	output_groups(output, O, int* arr);
+	free(P);
+	free(O);
 
 	return 0;
 }
-*/
+
+
+
