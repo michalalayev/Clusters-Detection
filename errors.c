@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include "errors.h"
 
 void check_alloc(void* ptr) {
 	if (ptr == NULL) {
@@ -34,4 +34,9 @@ void check_M(int M) {
 		fprintf(stderr,"M equals 0, matrix B is not defined\n");
 		exit(1);
 	}
+}
+
+void size_error(const char* filename) {
+	fprintf(stderr, "Cannot determine size of %s\n", filename);
+	exit(1);
 }

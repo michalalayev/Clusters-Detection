@@ -1,9 +1,9 @@
-#include "parser.h"
-#include "errors.h"
-#include "group.h"
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "parser.h"
+#include "errors.h"
+#include "group.h"
 
 int* ranks_vec;
 
@@ -17,7 +17,7 @@ off_t calc_nnz(const char *filename, int n) {
         ints = size/sizeof(int);
         return ints-n-1;
     }
-    printf("Cannot determine size of %s\n", filename);
+    size_error(filename);
     return -1;
 }
 

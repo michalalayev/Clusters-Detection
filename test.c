@@ -5,9 +5,9 @@
 #include "spmat.h"
 #include "group.h"
 #include "stack.h"
-#include "mult.h"
+#include "alg_imp.h"
 #include <time.h>
-#include "optimization.h"
+
 
 void check_nnz(const char* filename, int n) {
 	int test,res;

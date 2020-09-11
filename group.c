@@ -1,27 +1,7 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include "spmat.h"
 #include "group.h"
 #include "errors.h"
 
-/*typedef struct _ELEM
-{*/
-	/*int data; the name of the node*/
-/*	struct _ELEM *next;
-} ELEM;
-
-typedef struct
-{
-	ELEM* head;
-	int len;
-} LIST;
-
-typedef struct
-{
-	LIST* list;*/
-	/*spmat* Ag;
-	int* ranks;*/
-/*} group;*/
 
 /*this function is only for our use, not for the project. can be deleted before submition*/
 group* create_group_by_array(int *arr, int len)
@@ -155,29 +135,7 @@ group** split_group(int* s, group* g)
 	return splited_g;
 }
 
-void g_to_vector(group* g, int* g_vector)
-{
-	int nodeNum;
-	int i;
-	int val;
-	int g_len;
-	ELEM* currNode;
 
-	currNode = g->head;
-	g_len = g->len;
-
-	for(i = 0; i < g_len; i++)
-	{
-		val = i;
-	    nodeNum = currNode->data;
-		if(i == 0)
-		{
-			val = -1;
-		}
-		g_vector[nodeNum] = val;
-		currNode = currNode->next;
-	}
-}
 
 
 

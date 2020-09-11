@@ -1,16 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include "spmat.h"
 #include "errors.h"
-#include <math.h>
-#include <string.h>
 
-/*typedef struct
-{
-	int *colind;
-	int *rowptr;
-} ArrayMat;*/
 
 /*add the nodes who are neighbors of node i to A*/
 void array_add_row(spmat *A, const int *nodes, int rank, int i)
@@ -213,136 +205,6 @@ spmat* spmat_allocate_array(int n, int nnz)
 	return sp;
 }
 
-void reset_row(int* row, int n) {
-
-	memset(row, 0, sizeof(int)*n);
-}
-
-spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector)
-{
-	spmat* Ag;
-	int len, data, start, range, end, i, val, cnt;
-	ELEM* node;
-	ArrayMat *mat, *g_mat;
-	int *rp, *colind, *g_rp, *g_colind;
-
-	len = g->len;
-	node = g->head;
-	mat = (ArrayMat*) A->private;
-	rp = mat->rowptr;
-	colind = mat->colind;
-	reset_row(g_vector, A->n);
-	g_to_vector(g, g_vector);
-	Ag = spmat_allocate_array(len, nnz);
-	g_mat = (ArrayMat*) Ag->private;
-	g_rp = g_mat->rowptr;
-	g_rp++;
-	g_colind = g_mat->colind;
-	cnt = 0;
-
-	for ( ; node != NULL; node = node->next){
-		data = node->data;
-		start = rp[data];
-		range = rp[data+1] - start;
-		end = start + range;
-		for (i = start; i < end; ++i) {
-			val = g_vector[colind[i]];
-			if (val != 0) {
-				if (val == -1) {
-					*g_colind = 0;
-				}
-				else {
-					*g_colind = val;
-				}
-				cnt++;
-				g_colind++;
-			}
-		}
-		*g_rp = cnt;
-		g_rp++;
-	}
-	/*reset_row(g_vector, A->n);*/
-	return Ag;
-}
-
-/*function for A*/
-void build_full_row(spmat* A, int* A_row, int row_num)
-{
-	int start, range, i;
-	ArrayMat *mat;
-	int *rp, *colind;
-
-	reset_row(A_row, A->n);
-	mat = (ArrayMat*) A->private;
-	rp = mat->rowptr;
-	colind = mat->colind;
-	start = rp[row_num];
-	colind += start;
-	range = rp[row_num+1] - start;
-	for (i = 0; i < range; ++i) {
-		A_row[*colind] = 1;
-		colind++;
-	}
-}
-
-/*f is a vector of len ng+2, f[ng] = 1-norm, f[ng+1] = nnz*/
-void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, double* f)
-{
-	int nnz, g_row, g_col, add;
-	double sumf, sum_norm, diag, max;
-	ELEM *ptr_row, *ptr_col;
-
-	nnz = 0;
-	ptr_row = g->head;
-
-	for (; ptr_row != NULL; ptr_row = ptr_row->next) {
-		sumf = 0;
-		sum_norm = 0;
-		g_row = ptr_row->data;
-		build_full_row(A, A_row, g_row);
-		ptr_col = g->head;
-		for (; ptr_col != NULL; ptr_col = ptr_col->next) {
-			g_col = ptr_col->data;
-			if (A_row[g_col] == 1) {
-				nnz++;
-				add = M - ranks[g_row]*ranks[g_col];
-			}
-			else {
-				add = -(ranks[g_row]*ranks[g_col]);
-			}
-			sumf += add;
-			if (g_row != g_col) {
-				sum_norm += abs(add);
-			}
-		}
-		*f = sumf/M;
-		diag = (double) (-ranks[g_row]*ranks[g_row])/M - (*f);
-		sum_norm = sum_norm/M + fabs(diag);
-		f++;
-		if (ptr_row == g->head) {
-			max = sum_norm;
-		}
-		else {
-			if (sum_norm > max) {
-				max = sum_norm;
-			}
-		}
-	}
-	*f = max; /*this is 1-norm of B[g]_hat*/
-	*(f+1) = nnz; /*this is the number of non-zero elements in A[g]*/
-}
-
-/*move to other module later*/
-void fill_g_ranks(group* g, int* ranks, int* g_ranks)
-{
-	ELEM* node;
-
-	node = g->head;
-	for (; node != NULL; node = node->next) {
-		*g_ranks = ranks[node->data];
-		g_ranks++;
-	}
-}
 
 
 

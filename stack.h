@@ -36,7 +36,6 @@ void push(group *g, stack *stk);
 group* pop(stack *stk);
 group* top(const stack *stk);
 boolean empty(const stack *stk);
-boolean full(const stack *stk);
-void put_groups_in_stacks(group** splited_g, stack* P, stack* O);
+boolean full(const stack *stk); /*delete this function, not used*/
 
 #endif /* STACK_H_ */

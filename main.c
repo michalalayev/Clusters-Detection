@@ -1,16 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "parser.h"
 #include "spmat.h"
-#include "errors.h"
 #include "group.h"
 #include "stack.h"
-#include "mult.h"
-#include "optimization.h"
+#include "parser.h"
+#include "alg_imp.h"
+#include "errors.h"
 
-#define IS_POSITIVE(X) ((X) > 0.00001)
-
+/*
 int main (int argc, char* argv[])
 {
 	char *input, *output;
@@ -33,7 +31,7 @@ int main (int argc, char* argv[])
 	check_M(M);
 	g_ranks = (int*) malloc(sizeof(int)*n);
 	check_alloc(g_ranks);
-	A_row = (int*) calloc(n,sizeof(int));
+	A_row = (int*) malloc(sizeof(int)*n);
 	check_alloc(A_row);
 	s = (int*) malloc(sizeof(int)*n);
 	check_alloc(s);
@@ -44,7 +42,7 @@ int main (int argc, char* argv[])
 	check_alloc(b_curr);
 	b_next = (double*) malloc(sizeof(double)*n);
 	check_alloc(b_next);
-	result = (double*) malloc(sizeof(double) * n);
+	result = (double*) malloc(sizeof(double)*n);
 	check_alloc(result);
 
 	O = initialize_stack(); //O is an empty stack
@@ -81,13 +79,17 @@ int main (int argc, char* argv[])
 			}
 		}
 		modularity_maximization(s, int* unmoved, int* indices, g_ranks, Ag, M, int* row);
-		splited_g = split_group(s, g);
-		put_groups_in_stacks(splited_g, P, O);
 
-		if (first_partition) {
+		if (!first_partition) {
+			Ag->free(Ag);
+		}
+		else {
 			g_ranks = tmp;
 			first_partition = 0;
 		}
+
+		splited_g = split_group(s, g);
+		put_groups_in_stacks(splited_g, P, O);
 	}
 
 	output = argv[2];
@@ -98,5 +100,5 @@ int main (int argc, char* argv[])
 	return 0;
 }
 
-
+*/
 

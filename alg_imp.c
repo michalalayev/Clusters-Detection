@@ -1,9 +1,167 @@
-#include "mult.h"
-#include <stdio.h> /*delete this later*/
-#include <stdlib.h> /*for rand() */
-#define epsilon 0.00001
+/*#include <stdio.h> maybe delete this later*/
+#include <stdlib.h> /* for rand() */
+#include <string.h> /* for memset */
+#include <math.h>
+#include "alg_imp.h"
 
-/*getting two int vectors, mult them and return scalar.*/
+
+void g_to_vector(group* g, int* g_vector)
+{
+	int nodeNum;
+	int i;
+	int val;
+	int g_len;
+	ELEM* currNode;
+
+	currNode = g->head;
+	g_len = g->len;
+
+	for(i = 0; i < g_len; i++)
+	{
+		val = i;
+	    nodeNum = currNode->data;
+		if(i == 0)
+		{
+			val = -1;
+		}
+		g_vector[nodeNum] = val;
+		currNode = currNode->next;
+	}
+}
+
+void reset_row(int* row, int n) {
+
+	memset(row, 0, sizeof(int)*n);
+}
+
+
+spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector)
+{
+	spmat* Ag;
+	int len, data, start, range, end, i, val, cnt;
+	ELEM* node;
+	ArrayMat *mat, *g_mat;
+	int *rp, *colind, *g_rp, *g_colind;
+
+	len = g->len;
+	node = g->head;
+	mat = (ArrayMat*) A->private;
+	rp = mat->rowptr;
+	colind = mat->colind;
+	reset_row(g_vector, A->n);
+	g_to_vector(g, g_vector);
+	Ag = spmat_allocate_array(len, nnz);
+	g_mat = (ArrayMat*) Ag->private;
+	g_rp = g_mat->rowptr;
+	g_rp++;
+	g_colind = g_mat->colind;
+	cnt = 0;
+
+	for ( ; node != NULL; node = node->next){
+		data = node->data;
+		start = rp[data];
+		range = rp[data+1] - start;
+		end = start + range;
+		for (i = start; i < end; ++i) {
+			val = g_vector[colind[i]];
+			if (val != 0) {
+				if (val == -1) {
+					*g_colind = 0;
+				}
+				else {
+					*g_colind = val;
+				}
+				cnt++;
+				g_colind++;
+			}
+		}
+		*g_rp = cnt;
+		g_rp++;
+	}
+	/*reset_row(g_vector, A->n);*/
+	return Ag;
+}
+
+/*function for A*/
+void build_full_row(spmat* A, int* A_row, int row_num)
+{
+	int start, range, i;
+	ArrayMat *mat;
+	int *rp, *colind;
+
+	reset_row(A_row, A->n);
+	mat = (ArrayMat*) A->private;
+	rp = mat->rowptr;
+	colind = mat->colind;
+	start = rp[row_num];
+	colind += start;
+	range = rp[row_num+1] - start;
+	for (i = 0; i < range; ++i) {
+		A_row[*colind] = 1;
+		colind++;
+	}
+}
+
+/*f is a vector of len ng+2, f[ng] = 1-norm, f[ng+1] = nnz*/
+void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, double* f)
+{
+	int nnz, g_row, g_col, add;
+	double sumf, sum_norm, diag, max;
+	ELEM *ptr_row, *ptr_col;
+
+	nnz = 0;
+	ptr_row = g->head;
+
+	for (; ptr_row != NULL; ptr_row = ptr_row->next) {
+		sumf = 0;
+		sum_norm = 0;
+		g_row = ptr_row->data;
+		build_full_row(A, A_row, g_row);
+		ptr_col = g->head;
+		for (; ptr_col != NULL; ptr_col = ptr_col->next) {
+			g_col = ptr_col->data;
+			if (A_row[g_col] == 1) {
+				nnz++;
+				add = M - ranks[g_row]*ranks[g_col];
+			}
+			else {
+				add = -(ranks[g_row]*ranks[g_col]);
+			}
+			sumf += add;
+			if (g_row != g_col) {
+				sum_norm += abs(add);
+			}
+		}
+		*f = sumf/M;
+		diag = (double) (-ranks[g_row]*ranks[g_row])/M - (*f);
+		sum_norm = sum_norm/M + fabs(diag);
+		f++;
+		if (ptr_row == g->head) {
+			max = sum_norm;
+		}
+		else {
+			if (sum_norm > max) {
+				max = sum_norm;
+			}
+		}
+	}
+	*f = max; /*this is 1-norm of B[g]_hat*/
+	*(f+1) = nnz; /*this is the number of non-zero elements in A[g]*/
+}
+
+
+void fill_g_ranks(group* g, int* ranks, int* g_ranks)
+{
+	ELEM* node;
+
+	node = g->head;
+	for (; node != NULL; node = node->next) {
+		*g_ranks = ranks[node->data];
+		g_ranks++;
+	}
+}
+
+
 int mult_vectors_int(int* vec1, int* vec2, int n)
 {
 	int result, i;
@@ -17,7 +175,6 @@ int mult_vectors_int(int* vec1, int* vec2, int n)
 	return result;
 }
 
-/*getting two vectors, int and double, mult them and return scalar.*/
 double mult_vectors_int_and_double(int* vec1, double* vec2, int n)
 {
 	int i;
@@ -32,7 +189,7 @@ double mult_vectors_int_and_double(int* vec1, double* vec2, int n)
 	return result;
 }
 
-/*getting two double vectors, mult them and return scalar.*/
+
 double mult_vectors_double(double* vec1, double* vec2, int n)
 {
 	int i;
@@ -444,6 +601,177 @@ void create_random_vector(double *b, int len)
 		b++;
 	}
 }
+
+
+/*i is the index of the row of Ag, we want to claculate score[i]*/
+double calc_score(int* s, spmat* Ag, int* g_ranks, int M, int i, int* row)
+{
+	double sum, x, score;
+	int ng, j;
+	int *s_start, *g_ranks_start;
+
+	build_full_row(Ag, row, i);
+	ng = Ag->n;
+	x = (double) g_ranks[i]/M;
+	s_start = s;
+	g_ranks_start = g_ranks;
+
+	sum = 0;
+	/*printf("i = %d\n", i);*/
+	for (j = 0; j < ng; ++j) {
+		if (j == i) {
+			sum += ( (*row - x*(*g_ranks))*(-(*s)) );
+		}
+		else {
+			sum += ( (*row - x*(*g_ranks))*(*s) );
+		}
+		/*printf("j = %d, *row = %d, *s = %d, D = %f, sum = %f\n", j, *row, *s, x*(*g_ranks), sum);*/
+		g_ranks++;
+		row++;
+		s++;
+	}
+	score =  4*(-s_start[i])*sum + 4*x*g_ranks_start[i];
+	return score;
+}
+
+void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, spmat* Ag, int M, int* row)
+{
+	double deltaQ, score, max_score, improve, max_improve;
+	int ng, i, k, first_move, max_score_index, max_imp_index, j, var;
+	int *unmoved_start, *indices_start;
+
+	unmoved_start = unmoved;
+	indices_start = indices;
+	ng = Ag->n;
+	deltaQ = 1;
+
+	while (IS_POSITIVE(deltaQ))
+	{
+		/*memset(unmoved, 0, sizeof(int)*ng);*/
+		reset_row(unmoved, ng);
+		indices = indices_start;
+		for (i = 0; i < ng; ++i) {
+			first_move = 1;
+			for (k = 0; k < ng; ++k) {
+				if(*unmoved == 0) {
+					score = calc_score(s, Ag, g_ranks, M, k, row);
+					if (first_move) {
+						first_move = 0;
+						max_score = score;   /*initialize*/
+						max_score_index = k; /*initialize*/
+					}
+					else {
+						if (score >= max_score) {
+							max_score = score;   /*update*/
+							max_score_index = k; /*update*/
+						}
+					}
+				}
+				unmoved++;
+			}
+			unmoved = unmoved_start;
+			s[max_score_index] = -s[max_score_index];
+			printf("s: ");
+			for (var = 0; var < ng; ++var) {
+				printf("%d ",s[var]);
+			}
+			printf("\n");
+			*indices = max_score_index;
+			indices++;
+			if (i == 0) {
+				improve = max_score;   /*initialize improve*/
+				max_improve = improve; /*initialize max_improve*/
+				max_imp_index = 0;     /*initialize max_imp_index*/
+			}
+			else {
+				improve += max_score;
+				if (improve >= max_improve) {
+					max_improve = improve;
+					max_imp_index = i;
+				}
+			}
+			printf("i = %d, improve = %f, max_improve = %f, max_imp_index = %d\n",i, improve, max_improve, max_imp_index);
+			printf("max_score_index = %d\n",max_score_index);
+			unmoved[max_score_index] = 1;
+		}
+		/* end of loop */
+		for (i = (max_imp_index+1); i < ng; ++i) {
+			j = indices[i];
+			printf("i = %d, j = %d\n",i, j);
+			s[j] = -s[j];
+		}
+		printf("s after move: ");
+		for (var = 0; var < ng; ++var) {
+			printf("%d ",s[var]);
+		}
+		printf("\n");
+		if (max_imp_index == (ng-1)) {
+			deltaQ = 0;
+			printf("here\n");
+		}
+		else {
+			deltaQ = max_improve;
+		}
+		printf("deltaQ = %f\n",deltaQ);
+	}
+}
+
+
+void fill_with_ones(int* s, int len)
+{
+	int i;
+
+	for (i = 0; i < len; ++i)
+	{
+		*s = 1;
+		s++;
+	}
+}
+
+void create_s(int* s, double* v, int len)
+{
+	int i;
+
+	for (i = 0; i < len; ++i) {
+		if (IS_POSITIVE(*v)) {
+			*s = 1;
+		}
+		else {
+			*s = (-1);
+		}
+		v++;
+		s++;
+	}
+}
+
+void put_groups_in_stacks(group** splited_g, stack* P, stack* O)
+{
+	group *g1, *g2;
+
+	g1 = splited_g[0];
+	g2 = splited_g[1];
+	free(splited_g);
+
+	if (g2->len == 0) { /*g2 is empty, and g1 is the full g*/
+		push(g1, O);
+		free(g2);
+	}
+	else {
+		if (g2->len == 1) {
+			push(g2, O);
+		}
+		else {
+			push(g2, P);
+		}
+		if (g1->len == 1) {
+			push(g1, O);
+		}
+		else {
+			push(g1, P);
+		}
+	}
+}
+
 
 
 
