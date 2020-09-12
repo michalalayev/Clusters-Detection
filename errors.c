@@ -1,5 +1,8 @@
 #include <stdlib.h>
+#include <math.h>
 #include "errors.h"
+
+#define epsilon 0.00001
 
 void check_alloc(void* ptr) {
 	if (ptr == NULL) {
@@ -39,4 +42,12 @@ void check_M(int M) {
 void size_error(const char* filename) {
 	fprintf(stderr, "Cannot determine size of %s\n", filename);
 	exit(1);
+}
+
+void check_devision_by_zero(double val)
+{
+	if (fabs(val) <= epsilon) {
+		fprintf(stderr, "Math error, devision by zero\n");
+		exit(1);
+	}
 }

@@ -1,6 +1,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include "parser.h"
 #include "errors.h"
 #include "group.h"

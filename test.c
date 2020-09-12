@@ -8,7 +8,7 @@
 #include "alg_imp.h"
 #include <time.h>
 
-
+/*
 void check_nnz(const char* filename, int n) {
 	int test,res;
 
@@ -20,7 +20,7 @@ void check_nnz(const char* filename, int n) {
 	else {
 		printf("test is: %d",test);
 	}
-}
+} */
 
 void print_A(spmat* A, int nnz){
 
@@ -51,6 +51,7 @@ void print_k(int n) {
 	}
 }
 
+/*
 void check_g_to_array()
 {
 	ELEM *node;
@@ -79,7 +80,7 @@ void check_g_to_array()
 
 	}
 	free(new_g);
-}
+} */
 
 void check_split()
 {
@@ -194,6 +195,7 @@ spmat* check_create_Ag(char* filename) {
 	return Ag;
 }
 
+/*
 void check_build_full_row(char* filename) {
 
 	spmat *A;
@@ -213,7 +215,7 @@ void check_build_full_row(char* filename) {
 	}
 	free(A_row);
 
-}
+} */
 
 void check_calc_f_1norm_and_nnz(char* filename)
 {
@@ -542,7 +544,7 @@ void check_output_groups(char* input_filename, char* output_filename)
 
 
 
-int main (int argc, char* argv[]) {
+/*int main (int argc, char* argv[]) {
 
 	int* arr, i;
 	FILE* in;
@@ -556,7 +558,7 @@ int main (int argc, char* argv[]) {
 		printf("%d ",arr[i]);
 	}
 
-	/*clock_t start,end;
+	clock_t start,end;
 	argc += 0;
 	filename = argv[1];
 	srand(time(NULL));
@@ -565,9 +567,9 @@ int main (int argc, char* argv[]) {
 		check_power_iteration(filename);
 	}
 	end = clock();
-	printf("\nExecution took %f seconds\n", ((double)(end-start) / CLOCKS_PER_SEC));*/
+	printf("\nExecution took %f seconds\n", ((double)(end-start) / CLOCKS_PER_SEC));
 
-	/*check_stack();
+	check_stack();
 	Ag = check_create_Ag(filename);
 	ng = Ag->n;
 	printf("ng = %d\n", ng);
@@ -584,10 +586,10 @@ int main (int argc, char* argv[]) {
 	for (i = 0; i < ng; ++i)
 	{
 		printf("%f ", res[i]);
-	}*/
+	}
 
 	return 0;
 
-}
+} */
 
 

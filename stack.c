@@ -44,10 +44,11 @@ boolean empty(const stack *stk)
    return ((boolean) (stk -> cnt == EMPTY));
 }
 
-boolean full(const stack *stk) /*delete this function, not used*/
+/*delete this function, not used*/
+/*boolean full(const stack *stk)
 {
    return ((boolean) (stk -> cnt == FULL));
-}
+}*/
 
 
 

@@ -15,7 +15,7 @@
 #include "group.h"
 
 #define   EMPTY      0
-#define   FULL       5000000 /*five million*/
+/*#define   FULL       5000000*/  /*five million*/
 
 typedef enum {false, true} boolean;
 
@@ -36,6 +36,6 @@ void push(group *g, stack *stk);
 group* pop(stack *stk);
 group* top(const stack *stk);
 boolean empty(const stack *stk);
-boolean full(const stack *stk); /*delete this function, not used*/
+/*boolean full(const stack *stk); */ /*delete this function, not used*/
 
 #endif /* STACK_H_ */

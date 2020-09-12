@@ -3,6 +3,7 @@
 #include <string.h> /* for memset */
 #include <math.h>
 #include "alg_imp.h"
+#include "errors.h"
 
 
 void g_to_vector(group* g, int* g_vector)
@@ -29,6 +30,7 @@ void g_to_vector(group* g, int* g_vector)
 	}
 }
 
+/* Fills with zeroes the pre-allocated array row, of length n */
 void reset_row(int* row, int n) {
 
 	memset(row, 0, sizeof(int)*n);
@@ -82,7 +84,8 @@ spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector)
 	return Ag;
 }
 
-/*function for A*/
+/* Builds full row of the matrix A from its sparse representation, into the pre-allocated array A_row.
+ * row_num is the index of the row in A to build. */
 void build_full_row(spmat* A, int* A_row, int row_num)
 {
 	int start, range, i;
@@ -161,7 +164,7 @@ void fill_g_ranks(group* g, int* ranks, int* g_ranks)
 	}
 }
 
-
+/* Multiplies two vectors of type int and length n, and returns a scalar */
 int mult_vectors_int(int* vec1, int* vec2, int n)
 {
 	int result, i;
@@ -175,6 +178,7 @@ int mult_vectors_int(int* vec1, int* vec2, int n)
 	return result;
 }
 
+/* Multiplies two vectors of length n, first of type int and second of type double, and returns a scalar */
 double mult_vectors_int_and_double(int* vec1, double* vec2, int n)
 {
 	int i;
@@ -189,7 +193,7 @@ double mult_vectors_int_and_double(int* vec1, double* vec2, int n)
 	return result;
 }
 
-
+/* Multiplies two vectors of type double and length n, and returns a scalar */
 double mult_vectors_double(double* vec1, double* vec2, int n)
 {
 	int i;
@@ -443,6 +447,7 @@ double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, d
 	u = u_start;
 	numerator = mult_vectors_double(u, Au, ng);
 	denominator = mult_vectors_double(u, u, ng);
+	check_devision_by_zero(denominator);
 	lamda = numerator/denominator;
 	return (lamda - norm1);
 }
@@ -475,6 +480,7 @@ double calc_leading_eigenvalue2(spmat* Ag, int M, int* g_ranks, double* f, doubl
 	u = u_start;
 	numerator = mult_vectors_double(u, Au, ng);
 	denominator = mult_vectors_double(u, u, ng);
+	check_devision_by_zero(denominator);
 	lamda = numerator/denominator;
 	return (lamda - norm1);
 }
@@ -516,6 +522,7 @@ double calc_leading_eigenvalue3(spmat* Ag, int M, int* g_ranks, double* f, doubl
 	u = u_start;
 	numerator = mult_vectors_double(u, Au, ng);
 	denominator = mult_vectors_double(u, u, ng);
+	check_devision_by_zero(denominator);
 	lamda = numerator/denominator;
 	return (lamda - norm1);
 }
@@ -637,7 +644,7 @@ double calc_score(int* s, spmat* Ag, int* g_ranks, int M, int i, int* row)
 void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, spmat* Ag, int M, int* row)
 {
 	double deltaQ, score, max_score, improve, max_improve;
-	int ng, i, k, first_move, max_score_index, max_imp_index, j, var;
+	int ng, i, k, first_move, max_score_index, max_imp_index, j;
 	int *unmoved_start, *indices_start;
 
 	unmoved_start = unmoved;
@@ -671,11 +678,11 @@ void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, s
 			}
 			unmoved = unmoved_start;
 			s[max_score_index] = -s[max_score_index];
-			printf("s: ");
+			/*printf("s: ");
 			for (var = 0; var < ng; ++var) {
 				printf("%d ",s[var]);
 			}
-			printf("\n");
+			printf("\n");*/
 			*indices = max_score_index;
 			indices++;
 			if (i == 0) {
@@ -690,29 +697,29 @@ void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, s
 					max_imp_index = i;
 				}
 			}
-			printf("i = %d, improve = %f, max_improve = %f, max_imp_index = %d\n",i, improve, max_improve, max_imp_index);
-			printf("max_score_index = %d\n",max_score_index);
+			/*printf("i = %d, improve = %f, max_improve = %f, max_imp_index = %d\n",i, improve, max_improve, max_imp_index);
+			printf("max_score_index = %d\n",max_score_index);*/
 			unmoved[max_score_index] = 1;
 		}
 		/* end of loop */
 		for (i = (max_imp_index+1); i < ng; ++i) {
 			j = indices[i];
-			printf("i = %d, j = %d\n",i, j);
+			/*printf("i = %d, j = %d\n",i, j);*/
 			s[j] = -s[j];
 		}
-		printf("s after move: ");
+		/*printf("s after move: ");
 		for (var = 0; var < ng; ++var) {
 			printf("%d ",s[var]);
 		}
-		printf("\n");
+		printf("\n");*/
 		if (max_imp_index == (ng-1)) {
 			deltaQ = 0;
-			printf("here\n");
+			/*printf("here\n");*/
 		}
 		else {
 			deltaQ = max_improve;
 		}
-		printf("deltaQ = %f\n",deltaQ);
+		/*printf("deltaQ = %f\n",deltaQ);*/
 	}
 }
 

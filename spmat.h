@@ -36,7 +36,7 @@ typedef struct _spmat {
 /* Allocates a new arrays sparse matrix of size n with nnz non-zero elements */
 spmat* spmat_allocate_array(int n, int nnz);
 
-
+/*remove these lines leater*/
 double array_mult_double2(const spmat *A, const double *v, int i);
 double array_mult_double3(const double *v, int *colind, int nnz_in_row);
 

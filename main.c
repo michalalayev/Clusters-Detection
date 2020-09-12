@@ -8,16 +8,42 @@
 #include "alg_imp.h"
 #include "errors.h"
 
-/*
+void allocate_int(int** arr_ptr, int len)
+{
+	*arr_ptr = (int*) malloc(sizeof(int)*len);
+	check_alloc(*arr_ptr);
+}
+
+void allocate_double(double** arr_ptr, int len)
+{
+	*arr_ptr = (double*) malloc(sizeof(double)*len);
+	check_alloc(*arr_ptr);
+}
+
+void print_output(char* filename) {
+
+	FILE* out;
+	int i, *arr;
+
+	arr = (int*) malloc(sizeof(int)*24);
+	out = fopen(filename,"r");
+	fread(arr, sizeof(int), 24, out);
+	for (i = 0; i < 24; ++i) {
+		printf("%d ",arr[i]);
+	}
+}
+
+
+
 int main (int argc, char* argv[])
 {
-	char *input, *output;
+	char *input/*, *output*/;
 	spmat *A, *Ag;
-	int *ranks, *g_ranks, *A_row, *s, *tmp; //A_row is also for g_vec
+	int *ranks, *g_ranks, *A_row, *s, *tmp, *res_int, *indices, *unmoved; /*A_row is also for g_vec*/
 	double *f, *b_curr, *b_next, *result, eigen_val, deltaQ;
 	int n, M, first_partition, ng;
 	ArrayMat *arr_mat;
-	group *initial_g, *g, **splited_g;
+	group *initial_g, *g/*, **splited_g*/;
 	stack *P, *O;
 
 	srand(time(NULL));
@@ -25,32 +51,31 @@ int main (int argc, char* argv[])
 	input = argv[1];
 	A = create_A(input);
 	ranks = get_ranks();
+	ranks += 0; /*#############*/
 	n = A->n;
 	arr_mat = (ArrayMat*) A->private;
 	M = arr_mat->rowptr[n];
 	check_M(M);
-	g_ranks = (int*) malloc(sizeof(int)*n);
-	check_alloc(g_ranks);
-	A_row = (int*) malloc(sizeof(int)*n);
-	check_alloc(A_row);
-	s = (int*) malloc(sizeof(int)*n);
-	check_alloc(s);
 
-	f = (double*) malloc(sizeof(double)*(n+2));
-	check_alloc(f);
-	b_curr = (double*) malloc(sizeof(double)*n);
-	check_alloc(b_curr);
-	b_next = (double*) malloc(sizeof(double)*n);
-	check_alloc(b_next);
-	result = (double*) malloc(sizeof(double)*n);
-	check_alloc(result);
+	allocate_int(&g_ranks, n);
+	allocate_int(&A_row, n);
+	allocate_int(&s, n);
+	allocate_int(&res_int, n);
+	allocate_int(&unmoved, n);
 
-	O = initialize_stack(); //O is an empty stack
+	allocate_double(&f, n+2);
+	allocate_double(&b_curr, n);
+	allocate_double(&b_next, n);
+	allocate_double(&result, n);
+
+	O = initialize_stack(); /*O is an empty stack*/
 	P = initialize_stack();
 	initial_g = initial_group(n);
-	push(initial_g, P); //P contains the initial group with n nodes
+	push(initial_g, P); /*P now contains the initial group with n nodes*/
+	push(initial_g, O); /*#############*/
 	first_partition = 1;
-
+	first_partition += 0; /*#############*/
+	printf("before while\n");
 	while (!empty(P))
 	{
 		g = pop(P);
@@ -59,28 +84,37 @@ int main (int argc, char* argv[])
 		create_random_vector(b_curr, ng);
 		if (first_partition) {
 			Ag = A;
+			Ag += 0; /*#############*/
 			tmp = g_ranks;
+			tmp += 0; /*#############*/
 			g_ranks = ranks;
 		}
 		else {
 			Ag = create_Ag(A, g, f[ng+1], A_row);
 			fill_g_ranks(g, ranks, g_ranks);
 		}
-		power_iteration(Ag, result, M, g_ranks, f, b_curr, b_next); //after this b_curr contains the leading eigenvector
-		eigen_val = calc_leading_eigenvalue(Ag, result, M, g_ranks, f, b_curr, b_next); //eigen_val is the leading eigenvalue
+		printf("before PI\n");
+		power_iteration(Ag, result, M, g_ranks, f, b_curr, b_next); /*after this b_curr contains the leading eigenvector*/
+		printf("after PI\n");
+		eigen_val = calc_leading_eigenvalue(Ag, result, M, g_ranks, f, b_curr, b_next); /*eigen_val is the leading eigenvalue*/
+		eigen_val += 0;
+		printf("after eigenval\n");
 		if (!IS_POSITIVE(eigen_val)) {
 			fill_with_ones(s, ng);
 		}
 		else {
 			create_s(s, b_curr, ng);
-			deltaQ = calc_deltaQ(Ag, int* result_int, s, g_ranks, M, f);
+			deltaQ = calc_deltaQ(Ag, res_int, s, g_ranks, M, f);
 			if (!IS_POSITIVE(deltaQ)) {
 				fill_with_ones(s, ng);
 			}
 		}
-		modularity_maximization(s, int* unmoved, int* indices, g_ranks, Ag, M, int* row);
-
-		if (!first_partition) {
+		printf("after deltaQ\n");
+		indices = res_int; /*reuse of the allocated memory pointed by res_int for indices*/
+		printf("before MM\n");
+		modularity_maximization(s, unmoved, indices, g_ranks, Ag, M, A_row); /*reuse of the allocated memory pointed by A_row*/
+		printf("after MM\n");
+		/*if (!first_partition) {
 			Ag->free(Ag);
 		}
 		else {
@@ -90,15 +124,29 @@ int main (int argc, char* argv[])
 
 		splited_g = split_group(s, g);
 		put_groups_in_stacks(splited_g, P, O);
+		printf("end of while iteration\n"); */
 	}
-
+	/*printf("after while\n");
+	A->free(A);
+	free(ranks);
+	free(g_ranks);
+	free(A_row);
+	free(s);
+	free(res_int);
+	free(result);
+	free(f);
+	free(b_curr);
+	free(b_next);
+	printf("before output\n");
 	output = argv[2];
-	output_groups(output, O, int* arr);
+	output_groups(output, O, unmoved);*/ /*reuse of the allocated memory pointed by unmoved*/
+	/*printf("after output\n");
+	free(unmoved);
 	free(P);
 	free(O);
-
+	print_output(output); */
 	return 0;
 }
 
-*/
+
 
