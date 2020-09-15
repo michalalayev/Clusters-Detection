@@ -41,7 +41,7 @@ int main (int argc, char* argv[])
 	spmat *A, *Ag;
 	int *ranks, *g_ranks, *A_row, *s, *tmp, *res_int, *indices, *unmoved; /*A_row is also for g_vec*/
 	double *f, *b_curr, *b_next, *result, eigen_val, deltaQ;
-	int n, M, first_partition, ng;
+	int n, M, first_partition, ng, i;
 	ArrayMat *arr_mat;
 	group *initial_g, *g/*, **splited_g*/;
 	stack *P, *O;
@@ -96,8 +96,14 @@ int main (int argc, char* argv[])
 		printf("before PI\n");
 		power_iteration(Ag, result, M, g_ranks, f, b_curr, b_next); /*after this b_curr contains the leading eigenvector*/
 		printf("after PI\n");
+		printf("b_curr: ");
+		for (i = 0; i < ng; ++i) {
+			printf("%f ",b_curr[i]);
+		}
+		printf("\n");
 		eigen_val = calc_leading_eigenvalue(Ag, result, M, g_ranks, f, b_curr, b_next); /*eigen_val is the leading eigenvalue*/
 		eigen_val += 0;
+		printf("eigen_val= %f\n",eigen_val);
 		printf("after eigenval\n");
 		if (!IS_POSITIVE(eigen_val)) {
 			fill_with_ones(s, ng);
@@ -105,12 +111,19 @@ int main (int argc, char* argv[])
 		else {
 			create_s(s, b_curr, ng);
 			deltaQ = calc_deltaQ(Ag, res_int, s, g_ranks, M, f);
+			printf("deltaQ = %f\n",deltaQ);
 			if (!IS_POSITIVE(deltaQ)) {
 				fill_with_ones(s, ng);
 			}
 		}
 		printf("after deltaQ\n");
+		printf("s: ");
+		for (i = 0; i < ng; ++i) {
+			printf("%d ",s[i]);
+		}
+		printf("\n");
 		indices = res_int; /*reuse of the allocated memory pointed by res_int for indices*/
+		indices += 0; /*#############*/
 		printf("before MM\n");
 		modularity_maximization(s, unmoved, indices, g_ranks, Ag, M, A_row); /*reuse of the allocated memory pointed by A_row*/
 		printf("after MM\n");

@@ -1,9 +1,3 @@
-/*
- * stack.h
- *
- *  Created on: 24 ???? 2020
- *      Author: Michal
- */
 
 #ifndef STACK_H_
 #define STACK_H_

@@ -298,10 +298,10 @@ void check_stack()
 void check_power_iteration(char* filename) {
 
 	spmat* A;
-	int *ranks, *A_row;
+	int *ranks, *A_row, *s, *res_int;
 	ArrayMat *arr_mat;
 	int i, n, M;
-	double *f, *v, *result, *v_next, eval;
+	double *f, *v, *result, *v_next, eval, deltaQ;
 	group* g;
 
 	A = create_A(filename);
@@ -311,9 +311,11 @@ void check_power_iteration(char* filename) {
 	M = arr_mat->rowptr[n];
 	f = (double*) malloc(sizeof(double)*(n+2));
 	A_row = (int*) malloc(sizeof(int)*n);
+	s = (int*) malloc(sizeof(int)*n);
 	v = (double*) malloc(sizeof(double)*n);
 	v_next = (double*) malloc(sizeof(double)*n);
 	result = (double*) malloc(sizeof(double)*n);
+	res_int = (int*) malloc(sizeof(int)*n);
 	/*for (i = 0; i < n; ++i) {
 		v[i] = i+3;
 	}*/
@@ -326,11 +328,19 @@ void check_power_iteration(char* filename) {
 	}
 	printf("\n");*/
 	power_iteration(A, result, M, ranks, f, v, v_next);
+	printf("v: ");
 	for (i = 0; i < n; ++i) {
 		printf("%f ",v[i]);
 	}
 	eval = calc_leading_eigenvalue(A, result, M, ranks, f, v, v_next);
 	printf("\neval = %f\n",eval);
+	create_s(s, v, n);
+	printf("s: ");
+	for (i = 0; i < n; ++i) {
+		printf("%d ",s[i]);
+	}
+	deltaQ = calc_deltaQ(A, res_int, s, ranks, M, f);
+	printf("\ndeltaQ = %f\n",deltaQ);
 }
 
 void check_power_iteration2(char* filename) {
@@ -544,12 +554,15 @@ void check_output_groups(char* input_filename, char* output_filename)
 
 
 
-/*int main (int argc, char* argv[]) {
+int main1 (int argc, char* argv[]) {
 
-	int* arr, i;
-	FILE* in;
+	char* filename;
 
 	argc += 0;
+	filename = argv[1];
+	check_power_iteration(filename);
+
+/*
 	check_output_groups(argv[1], argv[2]);
 	arr = (int*) malloc(sizeof(int)*24);
 	in = fopen(argv[2],"r");
@@ -587,9 +600,9 @@ void check_output_groups(char* input_filename, char* output_filename)
 	{
 		printf("%f ", res[i]);
 	}
-
+*/
 	return 0;
 
-} */
+}
 
 
