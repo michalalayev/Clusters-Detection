@@ -192,6 +192,7 @@ spmat* check_create_Ag(char* filename) {
 		printf("%d ",g_rp[i]);
 	}
 	free(g_vector);
+	Ag->free(Ag);
 	return Ag;
 }
 
@@ -560,7 +561,7 @@ int main1 (int argc, char* argv[]) {
 
 	argc += 0;
 	filename = argv[1];
-	check_power_iteration(filename);
+	check_create_Ag(filename);
 
 /*
 	check_output_groups(argv[1], argv[2]);

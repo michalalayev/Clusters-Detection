@@ -31,19 +31,20 @@ void print_output(char* filename) {
 	for (i = 0; i < 24; ++i) {
 		printf("%d ",arr[i]);
 	}
+	free(arr);
 }
 
 
 
 int main (int argc, char* argv[])
 {
-	char *input/*, *output*/;
+	char *input, *output;
 	spmat *A, *Ag;
 	int *ranks, *g_ranks, *A_row, *s, *tmp, *res_int, *indices, *unmoved; /*A_row is also for g_vec*/
-	double *f, *b_curr, *b_next, *result, eigen_val, deltaQ;
-	int n, M, first_partition, ng, i;
+	double *f, *b_curr, *b_next, *result, eigen_val, deltaQ, check_deltaQ;
+	int n, M, first_partition, ng/*, i*/;
 	ArrayMat *arr_mat;
-	group *initial_g, *g/*, **splited_g*/;
+	group *initial_g, *g, **splited_g;
 	stack *P, *O;
 
 	srand(time(NULL));
@@ -51,7 +52,6 @@ int main (int argc, char* argv[])
 	input = argv[1];
 	A = create_A(input);
 	ranks = get_ranks();
-	ranks += 0; /*#############*/
 	n = A->n;
 	arr_mat = (ArrayMat*) A->private;
 	M = arr_mat->rowptr[n];
@@ -69,12 +69,11 @@ int main (int argc, char* argv[])
 	allocate_double(&result, n);
 
 	O = initialize_stack(); /*O is an empty stack*/
+	printf("O len: %d\n",O->cnt);
 	P = initialize_stack();
 	initial_g = initial_group(n);
 	push(initial_g, P); /*P now contains the initial group with n nodes*/
-	push(initial_g, O); /*#############*/
 	first_partition = 1;
-	first_partition += 0; /*#############*/
 	printf("before while\n");
 	while (!empty(P))
 	{
@@ -84,9 +83,7 @@ int main (int argc, char* argv[])
 		create_random_vector(b_curr, ng);
 		if (first_partition) {
 			Ag = A;
-			Ag += 0; /*#############*/
 			tmp = g_ranks;
-			tmp += 0; /*#############*/
 			g_ranks = ranks;
 		}
 		else {
@@ -97,12 +94,11 @@ int main (int argc, char* argv[])
 		power_iteration(Ag, result, M, g_ranks, f, b_curr, b_next); /*after this b_curr contains the leading eigenvector*/
 		printf("after PI\n");
 		printf("b_curr: ");
-		for (i = 0; i < ng; ++i) {
+		/*for (i = 0; i < ng; ++i) {
 			printf("%f ",b_curr[i]);
-		}
+		}*/
 		printf("\n");
 		eigen_val = calc_leading_eigenvalue(Ag, result, M, g_ranks, f, b_curr, b_next); /*eigen_val is the leading eigenvalue*/
-		eigen_val += 0;
 		printf("eigen_val= %f\n",eigen_val);
 		printf("after eigenval\n");
 		if (!IS_POSITIVE(eigen_val)) {
@@ -118,16 +114,17 @@ int main (int argc, char* argv[])
 		}
 		printf("after deltaQ\n");
 		printf("s: ");
-		for (i = 0; i < ng; ++i) {
+		/*for (i = 0; i < ng; ++i) {
 			printf("%d ",s[i]);
-		}
+		}*/
 		printf("\n");
 		indices = res_int; /*reuse of the allocated memory pointed by res_int for indices*/
-		indices += 0; /*#############*/
 		printf("before MM\n");
 		modularity_maximization(s, unmoved, indices, g_ranks, Ag, M, A_row); /*reuse of the allocated memory pointed by A_row*/
 		printf("after MM\n");
-		/*if (!first_partition) {
+		check_deltaQ = calc_deltaQ(Ag, res_int, s, g_ranks, M, f);
+		printf("new deltaQ = %f\n",check_deltaQ);
+		if (!first_partition) {
 			Ag->free(Ag);
 		}
 		else {
@@ -136,10 +133,12 @@ int main (int argc, char* argv[])
 		}
 
 		splited_g = split_group(s, g);
+		printf("g1 len: %d, g2 len: %d\n",splited_g[0]->len, splited_g[1]->len);
 		put_groups_in_stacks(splited_g, P, O);
-		printf("end of while iteration\n"); */
+		printf("end of while iteration\n");
 	}
-	/*printf("after while\n");
+
+	printf("after while\n");
 	A->free(A);
 	free(ranks);
 	free(g_ranks);
@@ -152,12 +151,12 @@ int main (int argc, char* argv[])
 	free(b_next);
 	printf("before output\n");
 	output = argv[2];
-	output_groups(output, O, unmoved);*/ /*reuse of the allocated memory pointed by unmoved*/
-	/*printf("after output\n");
+	output_groups(output, O, unmoved); /*reuse of the allocated memory pointed by unmoved*/
+	printf("after output\n");
 	free(unmoved);
 	free(P);
 	free(O);
-	print_output(output); */
+	print_output(output);
 	return 0;
 }
 

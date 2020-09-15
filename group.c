@@ -79,7 +79,7 @@ group** split_group(int* s, group* g)
 	cnt1 = cnt2 = 0;
 	first = *s;
 	second = -first;
-	while (*s == first && cnt1 < len+1) {
+	while (*s == first && cnt1 < len) {
 		cnt1++;
 		s++;
 	}

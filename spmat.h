@@ -4,7 +4,6 @@
 
 typedef struct
 {
-	int* values;
 	int *colind;
 	int *rowptr;
 } ArrayMat;

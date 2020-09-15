@@ -27,7 +27,7 @@ void array_free(spmat *A)
 {
 	ArrayMat *arr_mat;
 
-	arr_mat = (ArrayMat*) A -> private;
+	arr_mat = (ArrayMat*) A->private;
 	free(arr_mat -> colind);
 	free(arr_mat -> rowptr);
 	free(arr_mat);
@@ -191,7 +191,7 @@ spmat* spmat_allocate_array(int n, int nnz)
 		free(sp);
 		return NULL;  ### return error message ###
 	}*/
-	mat->rowptr = (int*) malloc(sizeof(int) * n);
+	mat->rowptr = (int*) malloc(sizeof(int) * (n+1));
 	check_alloc(mat->rowptr);
 	/*if (mat->rowptr == NULL) {
 		free(mat->colind);
@@ -199,8 +199,8 @@ spmat* spmat_allocate_array(int n, int nnz)
 		free(sp);
 		return NULL;  ### return error message ###
 	}*/
-	mat->rowptr[0] = 0;
 
+	mat->rowptr[0] = 0;
 	sp->private = (void*) mat;
 	return sp;
 }

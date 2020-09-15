@@ -644,28 +644,29 @@ double calc_score(int* s, spmat* Ag, int* g_ranks, int M, int i, int* row)
 void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, spmat* Ag, int M, int* row)
 {
 	double deltaQ, score, max_score, improve, max_improve;
-	int ng, i, k, first_move, max_score_index, max_imp_index, j, var, cnt;
+	int ng, i, k, first_move, max_score_index, max_imp_index, j/*, var, cnt*/;
 	int *unmoved_start, *indices_start;
 
 	unmoved_start = unmoved;
 	indices_start = indices;
 	ng = Ag->n;
 	deltaQ = 1;
-	cnt = 0;
+	/*cnt = 0;*/
 
 	while (IS_POSITIVE(deltaQ))
 	{
-		if (cnt < 6) {
+		/*if (cnt < 6) {
 			printf("cnt = %d\n",cnt);
-		}
+		}*/
 		reset_row(unmoved, ng);
-		indices = indices_start;
 		for (i = 0; i < ng; ++i) {
+			/*printf("i = %d\n",i);*/
 			first_move = 1;
 			for (k = 0; k < ng; ++k) {
+				/*printf("k = %d\n",k);*/
 				if(*unmoved == 0) {
 					score = calc_score(s, Ag, g_ranks, M, k, row);
-					printf("score = %f\n",score);
+					/*printf("score = %f\n",score);*/
 					if (first_move) {
 						first_move = 0;
 						max_score = score;   /*initialize*/
@@ -679,6 +680,7 @@ void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, s
 					}
 				}
 				unmoved++;
+				/*printf("max_score = %f, max_score_index = %d\n",max_score, max_score_index);*/
 			}
 			unmoved = unmoved_start;
 			/*s[max_score_index] = -s[max_score_index];*/
@@ -697,41 +699,46 @@ void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, s
 					max_imp_index = i;
 				}
 			}
-			printf("i = %d, improve = %f, max_improve = %f, max_imp_index = %d\n",i, improve, max_improve, max_imp_index);
-			printf("max_score_index = %d\n",max_score_index);
+			/*printf("improve = %f, max_improve = %f, max_imp_index = %d\n", improve, max_improve, max_imp_index);*/
 			unmoved[max_score_index] = 1;
 		}
 		/* end of loop */
-		if (cnt < 6) {
+		indices = indices_start;
+		/*if (cnt < 6) {
 			printf("max_imp_index = %d\n",max_imp_index);
-		}
+			printf("s before correction: ");
+			for (var = 0; var < ng; ++var) {
+				printf("%d ",s[var]);
+			}
+			printf("\n");
+		}*/
 		for (i = (max_imp_index+1); i < ng; ++i) {
 			j = indices[i];
 			/*printf("i = %d, j = %d\n",i, j);*/
 			s[j] = -s[j];
 		}
-		if (cnt < 6) {
-			printf("s after move: ");
+		/*if (cnt < 6) {
+			printf("s after correction: ");
 			for (var = 0; var < ng; ++var) {
 				printf("%d ",s[var]);
 			}
 			printf("\n");
-		}
+		}*/
 
 		if (max_imp_index == (ng-1)) {
 			deltaQ = 0;
-			printf("here\n");
+			/*printf("here\n");*/
 		}
 		else {
 			deltaQ = max_improve;
 		}
-		if (cnt < 6) {
+		/*if (cnt < 6) {
 			printf("deltaQ = %f\n",deltaQ);
 		}
 		cnt++;
 		if(cnt ==5) {
 			break;
-		}
+		}*/
 	}
 }
 
@@ -769,7 +776,7 @@ void put_groups_in_stacks(group** splited_g, stack* P, stack* O)
 
 	g1 = splited_g[0];
 	g2 = splited_g[1];
-	free(splited_g);
+
 
 	if (g2->len == 0) { /*g2 is empty, and g1 is the full g*/
 		push(g1, O);
@@ -789,6 +796,7 @@ void put_groups_in_stacks(group** splited_g, stack* P, stack* O)
 			push(g1, P);
 		}
 	}
+	free(splited_g);
 }
 
 
