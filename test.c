@@ -553,15 +553,61 @@ void check_output_groups(char* input_filename, char* output_filename)
 	free(s);
 }
 
+void check_initiate_score(char* filename)
+{
+	int *s, *ranks, *result;
+	int M, i, n, k;
+	spmat *A;
+	ArrayMat* arr_mat;
+	double* score;
 
+	A = create_A(filename);
+	n = A->n;
+	ranks = get_ranks();
+	arr_mat = (ArrayMat*) A->private;
+	M = arr_mat->rowptr[n];
 
-int main1 (int argc, char* argv[]) {
+	s = (int*) malloc(sizeof(int)*n);
+	result = (int*) malloc(sizeof(int)*n);
+	score = (double*) malloc(sizeof(double)*n);
+	for (i = 0; i < n; ++i) {
+		s[i] = 1;
+	}
+	k = 0;
+	s[k] = -1;
+
+	initiate_score(A, score, ranks, s, M, result);
+	printf("score: ");
+	for (i = 0; i < n; ++i) {
+		printf("%f ",score[i]);
+	}
+	printf("\n");
+
+	s[k] = 1;
+	update_score(A, score, ranks, s, M, result, k);
+	printf("updated score: ");
+	for (i = 0; i < n; ++i) {
+		printf("%f ",score[i]);
+	}
+	printf("\n");
+
+	k = 1;
+	s[k] = -1;
+	update_score(A, score, ranks, s, M, result, k);
+	printf("updated score: ");
+	for (i = 0; i < n; ++i) {
+		printf("%f ",score[i]);
+	}
+	printf("\n");
+}
+
+int main (int argc, char* argv[]) {
 
 	char* filename;
 
 	argc += 0;
 	filename = argv[1];
-	check_create_Ag(filename);
+	check_initiate_score(filename);
 
 /*
 	check_output_groups(argv[1], argv[2]);

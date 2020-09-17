@@ -67,5 +67,7 @@ void create_s(int* s, double* v, int len);
 
 void put_groups_in_stacks(group** splited_g, stack* P, stack* O);
 
+void initiate_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* result);
+void update_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* row, int k);
 
 #endif /* ALG_IMP_H_ */

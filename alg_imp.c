@@ -551,14 +551,15 @@ double calc_deltaQ(spmat* Ag, int* result, int* s, int* g_ranks, int M, double* 
 double calc_deltaQ2(spmat* Ag, int* s, int* g_ranks, int M, double* f)
 {
 	double x, deltaQ;
-	int ng, i, result;
+	int ng, i, result, *s_start;
 
 	ng = Ag->n;
 	x = mult_vectors_int(s, g_ranks, ng);
 	x /= M;
+	s_start = s;
 	deltaQ = 0;
 	for (i = 0; i < ng; ++i) {
-		result = array_mult_int2(Ag, s, i); /* ############# change this line to the following,
+		result = array_mult_int2(Ag, s_start, i); /* ############# change this line to the following,
 		and change the allocate function so mult_int is the function array_mult_int2
 		Ag->mult_int(Ag, s, i); ### */
 		deltaQ += ( (result - x*(*g_ranks) - (*f)*(*s)) * (*s) );
@@ -741,6 +742,51 @@ void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, s
 		}*/
 	}
 }
+
+void initiate_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* result)
+{
+	double a;
+	int ng, i, rank;
+
+	ng = Ag->n;
+	a = mult_vectors_int(s, g_ranks, ng);
+	a /= M;
+	Ag->mult_int(Ag, s, result);
+	for (i = 0; i < ng; ++i) {
+		rank = *g_ranks;
+		printf("s = %d, res = %f, rank^2 = %d, M = %d\n", *s, *result - a*rank, rank*rank, M);
+		*score = (-2) * ((*s) * (*result - a*rank) +  (double) (rank*rank)/M );
+		score++;
+		s++;
+		result++;
+		g_ranks++;
+	}
+}
+
+/*k is max_score_index*/
+void update_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* row, int k)
+{
+	int ng, sk, i;
+	double x;
+
+	build_full_row(Ag, row, k);
+	ng = Ag->n;
+	sk = s[k];
+	x = (double) g_ranks[k]/M;
+	for (i = 0; i < ng; ++i) {
+		if (i == k) {
+			(*score) *= (-1);
+		}
+		else {
+			(*score) -= 4*(*s)*sk*(*row - (*g_ranks)*x);
+		}
+		score++;
+		s++;
+		row++;
+		g_ranks++;
+	}
+}
+
 
 
 void fill_with_ones(int* s, int len)
