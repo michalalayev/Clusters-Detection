@@ -1,14 +1,15 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
+/*#include <sys/types.h>*/
 #include "parser.h"
 #include "errors.h"
 #include "group.h"
 
 int* ranks_vec;
+off_t nnz;
 
-off_t calc_nnz(const char *filename, int n) {
+void calc_nnz(const char *filename, int n) {
 
 	off_t size, ints;
 	struct stat st;
@@ -16,15 +17,16 @@ off_t calc_nnz(const char *filename, int n) {
     if (stat(filename, &st) == 0) {
         size = st.st_size;
         ints = size/sizeof(int);
-        return ints-n-1;
+        nnz = ints-n-1;
     }
-    size_error(filename);
-    return -1;
+    else {
+    	size_error(filename);
+    }
 }
 
 spmat* create_A(char* filename)
 {
-	int n, k, i, rank, nnz;
+	int n, k, i, rank;
 	int *nodes;
 	FILE* input;
 	spmat* A;
@@ -33,30 +35,37 @@ spmat* create_A(char* filename)
 	check_fopen(input);
 	k = fread(&n, sizeof(int), 1, input);
 	check_fread(k,1);
-	nnz = calc_nnz(filename, n);
+	calc_nnz(filename, n);
 	A = spmat_allocate_array(n, nnz);
 	ranks_vec = (int*) malloc(sizeof(int)*n);
 	check_alloc(ranks_vec);
+	nodes = (int*) malloc(sizeof(int) * n);
+	check_alloc(nodes);
 
 	for (i = 0; i < n; ++i) {
 		k = fread(&rank, sizeof(int), 1, input);
 		check_fread(k,1);
 		*ranks_vec = rank;
 		ranks_vec++;
-		nodes = (int*) malloc(sizeof(int) * rank);
-		check_alloc(nodes);
+		/*nodes = (int*) malloc(sizeof(int) * rank);
+		check_alloc(nodes);*/
 		k = fread(nodes, sizeof(int), rank, input);
 		check_fread(k,rank);
 		A->add_row(A, nodes, rank, i);
-		free(nodes);
+		/*free(nodes);*/
 	}
 	fclose(input);
+	free(nodes);
 	ranks_vec -= n;
 	return A;
 }
 
 int* get_ranks() {
 	return ranks_vec;
+}
+
+off_t get_nnz() {
+	return nnz;
 }
 
 

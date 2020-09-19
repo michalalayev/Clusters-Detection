@@ -555,8 +555,8 @@ void check_output_groups(char* input_filename, char* output_filename)
 
 void check_initiate_score(char* filename)
 {
-	int *s, *ranks, *result;
-	int M, i, n, k;
+	int *s, *ranks, *result, *unmoved;
+	int M, i, n, k, m;
 	spmat *A;
 	ArrayMat* arr_mat;
 	double* score;
@@ -570,11 +570,14 @@ void check_initiate_score(char* filename)
 	s = (int*) malloc(sizeof(int)*n);
 	result = (int*) malloc(sizeof(int)*n);
 	score = (double*) malloc(sizeof(double)*n);
+	unmoved = (int*) malloc(sizeof(int)*n);
 	for (i = 0; i < n; ++i) {
 		s[i] = 1;
+		unmoved[i] = 1;
 	}
 	k = 0;
 	s[k] = -1;
+	unmoved[1] = 0;
 
 	initiate_score(A, score, ranks, s, M, result);
 	printf("score: ");
@@ -582,6 +585,9 @@ void check_initiate_score(char* filename)
 		printf("%f ",score[i]);
 	}
 	printf("\n");
+
+	m = find_max_score_index(score, unmoved, n);
+	printf("max_score_index = %d\n",m);
 
 	s[k] = 1;
 	update_score(A, score, ranks, s, M, result, k);
@@ -599,9 +605,11 @@ void check_initiate_score(char* filename)
 		printf("%f ",score[i]);
 	}
 	printf("\n");
+	m = find_max_score_index(score, unmoved, n);
+	printf("max_score_index = %d\n",m);
 }
 
-int main (int argc, char* argv[]) {
+int main_test (int argc, char* argv[]) {
 
 	char* filename;
 

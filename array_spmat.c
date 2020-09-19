@@ -173,32 +173,10 @@ spmat* spmat_allocate_array(int n, int nnz)
 
 	mat = (ArrayMat*) malloc(sizeof(ArrayMat));
 	check_alloc(mat);
-	/*if (mat == NULL) {
-		free(sp);
-		return NULL;
-	}*/
-
-	/*mat->values = (int*) malloc(sizeof(int) * nnz);
-	if (mat->values == NULL) {
-		free(mat);
-		free(sp);
-		return NULL;  ### return error message ###
-	} */
 	mat->colind = (int*) malloc(sizeof(int) * nnz);
 	check_alloc(mat->colind);
-	/*if (mat->colind == NULL) {
-		free(mat);
-		free(sp);
-		return NULL;  ### return error message ###
-	}*/
 	mat->rowptr = (int*) malloc(sizeof(int) * (n+1));
 	check_alloc(mat->rowptr);
-	/*if (mat->rowptr == NULL) {
-		free(mat->colind);
-		free(mat);
-		free(sp);
-		return NULL;  ### return error message ###
-	}*/
 
 	mat->rowptr[0] = 0;
 	sp->private = (void*) mat;

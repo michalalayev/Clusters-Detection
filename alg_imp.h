@@ -26,12 +26,16 @@ void build_full_row(spmat* A, int* A_row, int row_num);
  * g_vector is a pre-allocated helping array. */
 spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector);
 
+void create_Ag2(spmat* A, spmat* Ag, group* g, int* g_vector);
+
 
 /* Calculates the sum of every row i in the matrix B[g], using the matrix A, the relevant group g,
  * and the pre-allocated helping array A_row, and saves it into the pre-allocated array f at index i.
  * Suppose B[g] is of size n. The function also calculates the 1-norm of B[g]_hat (saved into f[n]),
  * and the number of non-zero elements in A[g] (saved into f[n+1]) */
 void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, double* f);
+
+void calc_f_and_1norm(spmat* A, int* A_row, group* g, int* ranks, int M, double* f);
 
 /* Fills the pre-allocated array g_ranks with the ranks of the nodes in the group g */
 void fill_g_ranks(group* g, int* ranks, int* g_ranks);
@@ -68,6 +72,11 @@ void create_s(int* s, double* v, int len);
 void put_groups_in_stacks(group** splited_g, stack* P, stack* O);
 
 void initiate_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* result);
+void initiate_score2(spmat* Ag, double* score, int* g_ranks, int* s, int M);
+
 void update_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* row, int k);
+int find_max_score_index(double* score, int* unmoved, int unmoved_len);
+void modularity_maximization_new(int* s, int* unmoved, int* indices, double* score, int* g_ranks, spmat* Ag, int M, int* row, int* result);
+void modularity_maximization_new2(int* s, int* unmoved, int* indices, double* score, int* g_ranks, spmat* Ag, int M, int* row);
 
 #endif /* ALG_IMP_H_ */

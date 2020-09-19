@@ -46,24 +46,26 @@ void create_const_vector(double *b, int len)
 }
 
 
-int main1 (int argc, char* argv[])
+int main (int argc, char* argv[])
 {
 	char *input, *output;
-	spmat *A, *Ag;
+	spmat *A, *Ag, *Ag_tmp;
 	int *ranks, *g_ranks, *A_row, *s, *tmp, *res_int, *indices, *unmoved; /*A_row is also for g_vec*/
 	double *f, *b_curr, *b_next, *result, eigen_val, deltaQ/*, check_deltaQ*/;
-	int n, M, first_partition, ng/*, i*/;
+	int n, M, first_partition, ng, cnt/*, i*/;
 	ArrayMat *arr_mat;
 	group *initial_g, *g, **splited_g;
 	stack *P, *O;
 	clock_t start, end, end_pi, start_pi;
 	double time_pi, time_mm, time_total;
+	off_t nnz;
 
 	start = clock();
 	srand(time(NULL));
 
 	time_pi = 0;
 	time_mm = 0;
+	cnt = 0;
 
 	argc += 0;
 	input = argv[1];
@@ -79,49 +81,55 @@ int main1 (int argc, char* argv[])
 	allocate_int(&s, n);
 	allocate_int(&res_int, n);
 	allocate_int(&unmoved, n);
+	allocate_int(&indices, n);
 
-	allocate_double(&f, n+2);
+	allocate_double(&f, n+1);
 	allocate_double(&b_curr, n);
 	allocate_double(&b_next, n);
 	allocate_double(&result, n);
 
 	O = initialize_stack(); /*O is an empty stack*/
-	/*printf("O len: %d\n",O->cnt);*/
 	P = initialize_stack();
 	initial_g = initial_group(n);
 	push(initial_g, P); /*P now contains the initial group with n nodes*/
 	first_partition = 1;
-	/*printf("before while\n");*/
+	nnz = get_nnz();
+	Ag = spmat_allocate_array(n, nnz);
 	while (!empty(P))
 	{
 		g = pop(P);
-		calc_f_1norm_and_nnz(A, A_row, g, ranks, M, f);
+		calc_f_and_1norm(A, A_row, g, ranks, M, f);
 		ng = g->len;
-		create_random_vector(b_curr, ng);
-		/*create_const_vector(b_curr, ng);*/
+		/*if(first_partition) {
+			printf("norm = %f\n",f[ng]);
+		}*/
+		/*calc_f_1norm_and_nnz(A, A_row, g, ranks, M, f);*/
+		/*create_random_vector(b_curr, ng);*/
+		create_const_vector(b_curr, ng);
 		if (first_partition) {
+			Ag_tmp = Ag;
 			Ag = A;
 			tmp = g_ranks;
 			g_ranks = ranks;
 		}
 		else {
-			Ag = create_Ag(A, g, f[ng+1], A_row);
+			Ag->n = ng;
+			create_Ag2(A, Ag, g, A_row);
 			fill_g_ranks(g, ranks, g_ranks);
 		}
-		/*printf("before PI\n");*/
 		start_pi = clock();
 		power_iteration(Ag, result, M, g_ranks, f, b_curr, b_next); /*after this b_curr contains the leading eigenvector*/
 
-		/*printf("after PI\n");
-		printf("b_curr: ");*/
-		/*for (i = 0; i < ng; ++i) {
-			printf("%f ",b_curr[i]);
-		}
-		printf("\n");*/
 		end_pi = clock();
 		time_pi += (double)(end_pi-start_pi) / CLOCKS_PER_SEC;
 		eigen_val = calc_leading_eigenvalue(Ag, result, M, g_ranks, f, b_curr, b_next); /*eigen_val is the leading eigenvalue*/
-
+		/*if (cnt <= 3) {
+			printf("\niteration number: %d\n\n", cnt);
+			for (i = 0; i < ng; ++i) {
+				printf("Eigenvector[%d] = %f\n",i, b_curr[i]);
+			}
+			printf("Eigenvalue = %f\n",eigen_val);
+		}*/
 
 		/*printf("eigen_val= %f\n",eigen_val);*/
 		/*printf("after eigenval\n");*/
@@ -138,42 +146,42 @@ int main1 (int argc, char* argv[])
 				fill_with_ones(s, ng);
 			}
 		}
-		/*printf("after deltaQ\n");
-		printf("s: ");*/
-		/*for (i = 0; i < ng; ++i) {
+		/*printf("after deltaQ\n");*/
+		/*printf("s: ");
+		for (i = 0; i < ng; ++i) {
 			printf("%d ",s[i]);
 		}
 		printf("\n");*/
-		indices = res_int; /*reuse of the allocated memory pointed by res_int for indices*/
+		/*indices = res_int; */ /*reuse of the allocated memory pointed by res_int for indices*/
 		/*printf("before MM\n");*/
 		start_pi = clock();
-		modularity_maximization(s, unmoved, indices, g_ranks, Ag, M, A_row); /*reuse of the allocated memory pointed by A_row*/
+		modularity_maximization_new(s, unmoved, indices, result, g_ranks, Ag, M, A_row, res_int);  /*result is for score*/
+
+		/*modularity_maximization(s, unmoved, indices, g_ranks, Ag, M, A_row);*/ /*reuse of the allocated memory pointed by A_row*/
 		end_pi = clock();
 		time_mm += (double)(end_pi-start_pi) / CLOCKS_PER_SEC;
 		/*printf("after MM\n");*/
-		/*check_deltaQ = calc_deltaQ(Ag, res_int, s, g_ranks, M, f);
-		printf("new deltaQ = %f\n",check_deltaQ);*/
-		if (!first_partition) {
-			Ag->free(Ag);
-		}
-		else {
+		if (first_partition) {
 			g_ranks = tmp;
+			Ag = Ag_tmp;
 			first_partition = 0;
 		}
-
 		splited_g = split_group(s, g);
 		/*printf("g1 len: %d, g2 len: %d\n",splited_g[0]->len, splited_g[1]->len);*/
 		put_groups_in_stacks(splited_g, P, O);
 		/*printf("end of while iteration\n");*/
+		cnt++;
 	}
 
-	/*printf("after while\n");*/
+	printf("\ncnt = %d\n",cnt);
 	A->free(A);
+	Ag->free(Ag);
 	free(ranks);
 	free(g_ranks);
 	free(A_row);
 	free(s);
 	free(res_int);
+	free(indices);
 	free(result);
 	free(f);
 	free(b_curr);
@@ -189,7 +197,7 @@ int main1 (int argc, char* argv[])
 
 	end = clock();
 	time_total = (double)(end-start) / CLOCKS_PER_SEC;
-	printf("Execution took %f seconds\n", time_total);
+	printf("\n\nExecution took %f seconds\n", time_total);
 	printf("PI took %f seconds, %f precent of total time\n", time_pi, (time_pi/time_total)*100);
 	printf("MM took %f seconds, %f precent of total time\n", time_mm, (time_mm/time_total)*100);
 	printf("rest of the time: %f seconds, %f precent\n", \
@@ -205,14 +213,20 @@ int main2 (int argc, char* argv[])
 	spmat *A, *Ag;
 	int *ranks, *g_ranks, *A_row, *s, *tmp, *indices, *unmoved; /*A_row is also for g_vec*/
 	double *f, *b_curr, *b_next, *result, eigen_val, deltaQ/*, check_deltaQ*/;
-	int n, M, first_partition, ng/*, i*/;
+	int n, M, first_partition, ng, cnt/*, i*/;
 	ArrayMat *arr_mat;
 	group *initial_g, *g, **splited_g;
 	stack *P, *O;
-	clock_t start, end;
+	clock_t start, end, end_pi, start_pi;
+	double time_pi, time_mm, time_total;
 
 	start = clock();
 	srand(time(NULL));
+
+	time_pi = 0;
+	time_mm = 0;
+	cnt = 0;
+
 	argc += 0;
 	input = argv[1];
 	A = create_A(input);
@@ -257,9 +271,10 @@ int main2 (int argc, char* argv[])
 			fill_g_ranks(g, ranks, g_ranks);
 		}
 		/*printf("before PI\n");*/
-
+		start_pi = clock();
 		power_iteration2(Ag, M, g_ranks, f, b_curr, b_next); /*after this b_curr contains the leading eigenvector*/
-
+		end_pi = clock();
+		time_pi += (double)(end_pi-start_pi) / CLOCKS_PER_SEC;
 		/*printf("after PI\n");
 		printf("b_curr: ");*/
 		/*for (i = 0; i < ng; ++i) {
@@ -292,7 +307,11 @@ int main2 (int argc, char* argv[])
 		}
 		printf("\n");*/
 		/*printf("before MM\n");*/
-		modularity_maximization(s, unmoved, indices, g_ranks, Ag, M, A_row); /*reuse of the allocated memory pointed by A_row*/
+		start_pi = clock();
+		/*modularity_maximization(s, unmoved, indices, g_ranks, Ag, M, A_row); */ /*reuse of the allocated memory pointed by A_row*/
+		modularity_maximization_new2(s, unmoved, indices, result, g_ranks, Ag, M, A_row);  /*result is for score*/
+		end_pi = clock();
+		time_mm += (double)(end_pi-start_pi) / CLOCKS_PER_SEC;
 		/*printf("after MM\n");*/
 		/*check_deltaQ = calc_deltaQ(Ag, res_int, s, g_ranks, M, f);
 		printf("new deltaQ = %f\n",check_deltaQ);*/
@@ -308,9 +327,10 @@ int main2 (int argc, char* argv[])
 		/*printf("g1 len: %d, g2 len: %d\n",splited_g[0]->len, splited_g[1]->len);*/
 		put_groups_in_stacks(splited_g, P, O);
 		/*printf("end of while iteration\n");*/
+		cnt++;
 	}
 
-	/*printf("after while\n");*/
+	printf("cnt = %d\n",cnt);
 	A->free(A);
 	free(ranks);
 	free(g_ranks);
@@ -331,7 +351,12 @@ int main2 (int argc, char* argv[])
 	/*print_output(output);*/
 
 	end = clock();
-	printf("Execution took %f seconds\n", ((double)(end-start) / CLOCKS_PER_SEC));
+	time_total = (double)(end-start) / CLOCKS_PER_SEC;
+	printf("\n\nExecution took %f seconds\n", time_total);
+	printf("PI took %f seconds, %f precent of total time\n", time_pi, (time_pi/time_total)*100);
+	printf("MM took %f seconds, %f precent of total time\n", time_mm, (time_mm/time_total)*100);
+	printf("rest of the time: %f seconds, %f precent\n", \
+			time_total - time_pi - time_mm, ((time_total-time_pi-time_mm)/time_total)*100);
 
 	return 0;
 }
@@ -340,10 +365,10 @@ int main3(int argc, char* argv[]) {
 
 	int i;
 
-	for (i = 0; i < 20; ++i) {
+	for (i = 0; i < 10; ++i) {
 		printf("i = %d\n",i);
 		printf("version 1:\n");
-		main1(argc, argv);
+		main2(argc, argv);
 		printf("version 2:\n");
 		main2(argc, argv);
 		printf("\n");

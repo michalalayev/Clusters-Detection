@@ -84,6 +84,48 @@ spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector)
 	return Ag;
 }
 
+void create_Ag2(spmat* A, spmat* Ag, group* g, int* g_vector)
+{
+	int data, start, range, end, i, val, cnt;
+	ELEM* node;
+	ArrayMat *mat, *g_mat;
+	int *rp, *colind, *g_rp, *g_colind;
+
+	node = g->head;
+	mat = (ArrayMat*) A->private;
+	rp = mat->rowptr;
+	colind = mat->colind;
+	reset_row(g_vector, A->n);
+	g_to_vector(g, g_vector);
+	g_mat = (ArrayMat*) Ag->private;
+	g_rp = g_mat->rowptr;
+	g_rp++;
+	g_colind = g_mat->colind;
+	cnt = 0;
+
+	for ( ; node != NULL; node = node->next){
+		data = node->data;
+		start = rp[data];
+		range = rp[data+1] - start;
+		end = start + range;
+		for (i = start; i < end; ++i) {
+			val = g_vector[colind[i]];
+			if (val != 0) {
+				if (val == -1) {
+					*g_colind = 0;
+				}
+				else {
+					*g_colind = val;
+				}
+				cnt++;
+				g_colind++;
+			}
+		}
+		*g_rp = cnt;
+		g_rp++;
+	}
+}
+
 /* Builds full row of the matrix A from its sparse representation, into the pre-allocated array A_row.
  * row_num is the index of the row in A to build. */
 void build_full_row(spmat* A, int* A_row, int row_num)
@@ -152,6 +194,49 @@ void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, dou
 	*(f+1) = nnz; /*this is the number of non-zero elements in A[g]*/
 }
 
+/*f is a vector of len ng+1, f[ng] = 1-norm */
+void calc_f_and_1norm(spmat* A, int* A_row, group* g, int* ranks, int M, double* f)
+{
+	int g_row, g_col, add;
+	double sumf, sum_norm, diag, max;
+	ELEM *ptr_row, *ptr_col;
+
+	ptr_row = g->head;
+	for (; ptr_row != NULL; ptr_row = ptr_row->next) {
+		sumf = 0;
+		sum_norm = 0;
+		g_row = ptr_row->data;
+		build_full_row(A, A_row, g_row);
+		ptr_col = g->head;
+		for (; ptr_col != NULL; ptr_col = ptr_col->next) {
+			g_col = ptr_col->data;
+			if (A_row[g_col] == 1) {
+				add = M - ranks[g_row]*ranks[g_col];
+			}
+			else {
+				add = -(ranks[g_row]*ranks[g_col]);
+			}
+			sumf += add;
+			if (g_row != g_col) {
+				sum_norm += abs(add);
+			}
+		}
+		*f = sumf/M;
+		diag = (double) (-ranks[g_row]*ranks[g_row])/M - (*f);
+		sum_norm = sum_norm/M + fabs(diag);
+		f++;
+		if (ptr_row == g->head) {
+			max = sum_norm;
+		}
+		else {
+			if (sum_norm > max) {
+				max = sum_norm;
+			}
+		}
+	}
+	*f = max; /*this is 1-norm of B[g]_hat*/
+}
+
 
 void fill_g_ranks(group* g, int* ranks, int* g_ranks)
 {
@@ -213,7 +298,7 @@ void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, 
 {
 	double x, curr, next, magn, norm1;
 	double *b_curr_start, *b_next_start, *res_start, *f_start, *tmp;
-	int ng, i, done, cnt;
+	int ng, i, done, cnt, cnt_limit;
 	int *g_ranks_start;
 
 	ng = Ag->n;
@@ -223,10 +308,11 @@ void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, 
 	res_start = result;
 	f_start = f;
 	g_ranks_start = g_ranks;
-	done = 0; /*false*/
 	cnt = 0;
+	cnt_limit = (int) 0.5*ng*ng + 10000*ng + 300000;
+	done = 0; /*false*/
+
 	while (done == 0) {
-		cnt++;
 		done = 1; /*assume it's true*/
 		magn = 0;
 		Ag->mult_double(Ag, b_curr, result);
@@ -263,6 +349,7 @@ void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, 
 		b_curr = b_curr_start;
 		/*standartize b_next:*/
 		magn = sqrt(magn);
+		check_devision_by_zero(magn);
 		for (i = 0; i < ng; ++i){
 			*b_next /= magn;
 			if (done != 0 && fabs(*b_next - *b_curr) > epsilon)
@@ -278,6 +365,11 @@ void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, 
 		b_next = tmp;
 		b_curr_start = b_curr;
 		b_next_start = b_next;
+
+		cnt++;
+		if(cnt >= cnt_limit) {
+			infinite_loop_error();
+		}
 		/*printf("b_curr:\n");
 		for (i = 0; i < ng; ++i) {
 			printf("%f ",b_curr[i]);
@@ -328,6 +420,7 @@ void power_iteration2(spmat* Ag, int M, int* g_ranks, double* f, double* b_curr,
 		b_curr = b_curr_start;
 		/*standartize b_next:*/
 		magn = sqrt(magn);
+		check_devision_by_zero(magn);
 		for (i = 0; i < ng; ++i){
 			*b_next /= magn;
 			if (done != 0 && fabs(*b_next - *b_curr) > epsilon)
@@ -399,6 +492,7 @@ void power_iteration3(spmat* Ag, int M, int* g_ranks, double* f, double* b_curr,
 		rp = rp_start;
 		/*standartize b_next:*/
 		magn = sqrt(magn);
+		check_devision_by_zero(magn);
 		for (i = 0; i < ng; ++i){
 			*b_next /= magn;
 			if (done != 0 && fabs(*b_next - *b_curr) > epsilon)
@@ -754,7 +848,7 @@ void initiate_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* 
 	Ag->mult_int(Ag, s, result);
 	for (i = 0; i < ng; ++i) {
 		rank = *g_ranks;
-		printf("s = %d, res = %f, rank^2 = %d, M = %d\n", *s, *result - a*rank, rank*rank, M);
+		/*printf("s = %d, res = %f, rank^2 = %d, M = %d\n", *s, *result - a*rank, rank*rank, M);*/
 		*score = (-2) * ((*s) * (*result - a*rank) +  (double) (rank*rank)/M );
 		score++;
 		s++;
@@ -762,6 +856,30 @@ void initiate_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* 
 		g_ranks++;
 	}
 }
+
+void initiate_score2(spmat* Ag, double* score, int* g_ranks, int* s, int M)
+{
+	double a;
+	int ng, i, rank, *s_start, result;
+
+	s_start = s;
+	ng = Ag->n;
+	a = mult_vectors_int(s, g_ranks, ng);
+	a /= M;
+	for (i = 0; i < ng; ++i) {
+		rank = *g_ranks;
+		result = array_mult_int2(Ag, s_start, i); /* ############# change this line to the following,
+		and change the allocate function so mult_int is the function array_mult_int2
+		Ag->mult_int(Ag, s, i); ### */
+		/*printf("s = %d, res = %f, rank^2 = %d, M = %d\n", *s, *result - a*rank, rank*rank, M);*/
+		*score = (-2) * ((*s) * (result - a*rank) +  (double) (rank*rank)/M );
+		score++;
+		s++;
+		g_ranks++;
+	}
+}
+
+
 
 /*k is max_score_index*/
 void update_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* row, int k)
@@ -787,7 +905,223 @@ void update_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* ro
 	}
 }
 
+int find_max_score_index(double* score, int* unmoved, int unmoved_len)
+{
+	int i, max_score_index, first_unmoved;
+	double max_score;
 
+	first_unmoved = 1;
+	for (i = 0; i < unmoved_len; ++i) {
+		if(*unmoved == 0) {
+			if (first_unmoved) {
+				first_unmoved = 0;
+				max_score = *score;   /*initialize*/
+				max_score_index = i; /*initialize*/
+			}
+			else {
+				if (*score >= max_score) {
+					max_score = *score;   /*update*/
+					max_score_index = i; /*update*/
+				}
+			}
+		}
+		unmoved++;
+		score++;
+	}
+	return max_score_index;
+}
+
+void modularity_maximization_new(int* s, int* unmoved, int* indices, double* score, int* g_ranks, spmat* Ag, int M, int* row, int* result)
+{
+	double deltaQ, improve, max_improve;
+	int ng, i, max_imp_index, j/*, k, var, cnt*/;
+	int *indices_start;
+
+	indices_start = indices;
+	ng = Ag->n;
+	deltaQ = 1;
+	/*cnt = 0;*/
+
+	initiate_score(Ag, score, g_ranks, s, M, result);
+	while (IS_POSITIVE(deltaQ))
+	{
+		/*if (cnt < 6) {
+			printf("cnt = %d\n",cnt);
+		}*/
+		/*printf("\nnew iter\n");*/
+		reset_row(unmoved, ng);
+		/*printf("score :");
+		for (k = 0; k < ng; k++) {
+			printf("%f ",score[k]);
+		}
+		printf("\n");*/
+
+		for (i = 0; i < ng; ++i) {
+			/*printf("i = %d\n",i);*/
+			if (i != 0) {
+				update_score(Ag, score, g_ranks, s, M, row, j);
+			}
+			j = find_max_score_index(score, unmoved, ng);
+			s[j] = -s[j];
+			*indices = j;
+			indices++;
+			if (i == 0) {
+				improve = score[j];   /*initialize improve*/
+				max_improve = improve; /*initialize max_improve*/
+				max_imp_index = 0;     /*initialize max_imp_index*/
+			}
+			else {
+				improve += score[j];
+				if (improve >= max_improve) {
+					max_improve = improve;
+					max_imp_index = i;
+				}
+			}
+			/*printf("j = %d, sj = %d, improve = %f\n", j, s[j], improve);
+			printf("score :");
+			for (k = 0; k < ng; k++) {
+				printf("%f ",score[k]);
+			}
+			printf("\n");*/
+			unmoved[j] = 1;
+		}
+		/* end of loop */
+		update_score(Ag, score, g_ranks, s, M, row, j);
+		indices = indices_start;
+		/*if (cnt < 6) {
+			printf("max_imp_index = %d\n",max_imp_index);
+			printf("s before correction: ");
+			for (var = 0; var < ng; ++var) {
+				printf("%d ",s[var]);
+			}
+			printf("\n");
+		}*/
+		for (i = (max_imp_index+1); i < ng; ++i) {
+			j = indices[i];
+			/*printf("i = %d, j = %d\n",i, j);*/
+			s[j] = -s[j];
+			update_score(Ag, score, g_ranks, s, M, row, j);
+		}
+		/*if (cnt < 6) {
+			printf("s after correction: ");
+			for (var = 0; var < ng; ++var) {
+				printf("%d ",s[var]);
+			}
+			printf("\n");
+		}*/
+		/*printf("max_imp_index = %d\n",max_imp_index);*/
+		if (max_imp_index == (ng-1)) {
+			deltaQ = 0;
+			/*printf("here\n");*/
+		}
+		else {
+			deltaQ = max_improve;
+		}
+		/*if (cnt < 6) {
+			printf("deltaQ = %f\n",deltaQ);
+		}
+		cnt++;
+		if(cnt ==5) {
+			break;
+		}*/
+	}
+}
+
+void modularity_maximization_new2(int* s, int* unmoved, int* indices, double* score, int* g_ranks, spmat* Ag, int M, int* row)
+{
+	double deltaQ, improve, max_improve;
+	int ng, i, max_imp_index, j/*, k, var, cnt*/;
+	int *indices_start;
+
+	indices_start = indices;
+	ng = Ag->n;
+	deltaQ = 1;
+	/*cnt = 0;*/
+
+	initiate_score2(Ag, score, g_ranks, s, M);
+	while (IS_POSITIVE(deltaQ))
+	{
+		/*if (cnt < 6) {
+			printf("cnt = %d\n",cnt);
+		}*/
+		/*printf("\nnew iter\n");*/
+		reset_row(unmoved, ng);
+		/*printf("score :");
+		for (k = 0; k < ng; k++) {
+			printf("%f ",score[k]);
+		}
+		printf("\n");*/
+
+		for (i = 0; i < ng; ++i) {
+			/*printf("i = %d\n",i);*/
+			if (i != 0) {
+				update_score(Ag, score, g_ranks, s, M, row, j);
+			}
+			j = find_max_score_index(score, unmoved, ng);
+			s[j] = -s[j];
+			*indices = j;
+			indices++;
+			if (i == 0) {
+				improve = score[j];   /*initialize improve*/
+				max_improve = improve; /*initialize max_improve*/
+				max_imp_index = 0;     /*initialize max_imp_index*/
+			}
+			else {
+				improve += score[j];
+				if (improve >= max_improve) {
+					max_improve = improve;
+					max_imp_index = i;
+				}
+			}
+			/*printf("j = %d, sj = %d, improve = %f\n", j, s[j], improve);
+			printf("score :");
+			for (k = 0; k < ng; k++) {
+				printf("%f ",score[k]);
+			}
+			printf("\n");*/
+			unmoved[j] = 1;
+		}
+		/* end of loop */
+		update_score(Ag, score, g_ranks, s, M, row, j);
+		indices = indices_start;
+		/*if (cnt < 6) {
+			printf("max_imp_index = %d\n",max_imp_index);
+			printf("s before correction: ");
+			for (var = 0; var < ng; ++var) {
+				printf("%d ",s[var]);
+			}
+			printf("\n");
+		}*/
+		for (i = (max_imp_index+1); i < ng; ++i) {
+			j = indices[i];
+			/*printf("i = %d, j = %d\n",i, j);*/
+			s[j] = -s[j];
+			update_score(Ag, score, g_ranks, s, M, row, j);
+		}
+		/*if (cnt < 6) {
+			printf("s after correction: ");
+			for (var = 0; var < ng; ++var) {
+				printf("%d ",s[var]);
+			}
+			printf("\n");
+		}*/
+		/*printf("max_imp_index = %d\n",max_imp_index);*/
+		if (max_imp_index == (ng-1)) {
+			deltaQ = 0;
+			/*printf("here\n");*/
+		}
+		else {
+			deltaQ = max_improve;
+		}
+		/*if (cnt < 6) {
+			printf("deltaQ = %f\n",deltaQ);
+		}
+		cnt++;
+		if(cnt ==5) {
+			break;
+		}*/
+	}
+}
 
 void fill_with_ones(int* s, int len)
 {

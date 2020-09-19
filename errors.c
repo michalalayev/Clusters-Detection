@@ -51,3 +51,9 @@ void check_devision_by_zero(double val)
 		exit(1);
 	}
 }
+
+void infinite_loop_error()
+{
+	fprintf(stderr, "Infinite loop in power iteration\n");
+	exit(1);
+}

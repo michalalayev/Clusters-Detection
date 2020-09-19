@@ -10,5 +10,6 @@ void check_fopen(FILE* input);
 void check_M(int M);
 void size_error(const char* filename);
 void check_devision_by_zero(double val);
+void infinite_loop_error();
 
 #endif /* ERRORS_H_ */
