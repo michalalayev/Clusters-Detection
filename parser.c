@@ -1,7 +1,6 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
-/*#include <sys/types.h>*/
 #include "parser.h"
 #include "errors.h"
 #include "group.h"
@@ -47,12 +46,9 @@ spmat* create_A(char* filename)
 		check_fread(k,1);
 		*ranks_vec = rank;
 		ranks_vec++;
-		/*nodes = (int*) malloc(sizeof(int) * rank);
-		check_alloc(nodes);*/
 		k = fread(nodes, sizeof(int), rank, input);
 		check_fread(k,rank);
 		A->add_row(A, nodes, rank, i);
-		/*free(nodes);*/
 	}
 	fclose(input);
 	free(nodes);
@@ -70,7 +66,7 @@ off_t get_nnz() {
 
 
 /* This function receives a stack of groups, outputs them in ascending order to the output file named filename,
- * and frees the allocated memory of the stack and the groups.
+ * and frees the allocated memory of the stack and groups.
  * arr is an array of length n, the nodes of the groups are saved there before they are written to the file*/
 void output_groups(char* filename, stack* stk, int* arr)
 {

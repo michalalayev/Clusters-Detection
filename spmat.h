@@ -8,6 +8,7 @@ typedef struct
 	int *rowptr;
 } ArrayMat;
 
+
 typedef struct _spmat {
 	/* Matrix size (n*n) */
 	int		n;
@@ -25,21 +26,13 @@ typedef struct _spmat {
 	/* Multiplies matrix A by vector v of doubles, into result (result is pre-allocated) */
 	void	(*mult_double)(const struct _spmat *A, const double *v, double *result);
 
-	/* Private field for inner implementation.
-	 * Should not be read or modified externally */
+	/* Private field for inner implementation */
 	void	*private;
 } spmat;
-
 
 
 /* Allocates a new arrays sparse matrix of size n with nnz non-zero elements */
 spmat* spmat_allocate_array(int n, int nnz);
 
-/*remove these lines leater*/
-double array_mult_double2(const spmat *A, const double *v, int i);
-double array_mult_double3(const double *v, int *colind, int nnz_in_row);
-
-int array_mult_int2(const spmat *A, const int *v, int i);
-int array_mult_int3(const int *v, int *colind, int nnz_in_row);
 
 #endif

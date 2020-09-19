@@ -5,7 +5,6 @@
 #include "stack.h"
 #include <sys/types.h>
 
-void calc_nnz(const char *filename, int n);
 spmat* create_A(char* filename);
 int* get_ranks();
 off_t get_nnz();

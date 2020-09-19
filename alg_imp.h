@@ -13,70 +13,45 @@
  * and M is the sum of the ranks.*/
 
 
-/* ###################################################
-void g_to_vector(group* g, int* g_vector);
 
-void reset_row(int* row, int n);
-
-void build_full_row(spmat* A, int* A_row, int row_num);
-######################################################## */
+/* Creates a sub-matrix Ag of A according to the nodes in the group g. Ag is pre-allocated,
+ * and g_vector is a pre-allocated helping array. */
+void create_Ag(spmat* A, spmat* Ag, group* g, int* g_vector);
 
 
-/* Creates a sub-matrix Ag of A, with nnz non-zero elements, according to the nodes in the group g.
- * g_vector is a pre-allocated helping array. */
-spmat* create_Ag(spmat* A, group* g, int nnz, int* g_vector);
-
-void create_Ag2(spmat* A, spmat* Ag, group* g, int* g_vector);
-
-
-/* Calculates the sum of every row i in the matrix B[g], using the matrix A, the relevant group g,
+/* Calculates the sum of every row i in the matrix B[g] (of size n*n), using the matrix A, the relevant group g,
  * and the pre-allocated helping array A_row, and saves it into the pre-allocated array f at index i.
- * Suppose B[g] is of size n. The function also calculates the 1-norm of B[g]_hat (saved into f[n]),
- * and the number of non-zero elements in A[g] (saved into f[n+1]) */
-void calc_f_1norm_and_nnz(spmat* A, int* A_row, group* g, int* ranks, int M, double* f);
-
+ * The function also calculates the 1-norm of B[g]_hat (saved into f[n]) */
 void calc_f_and_1norm(spmat* A, int* A_row, group* g, int* ranks, int M, double* f);
 
 /* Fills the pre-allocated array g_ranks with the ranks of the nodes in the group g */
 void fill_g_ranks(group* g, int* ranks, int* g_ranks);
 
 
-/* ############################################################
-int mult_vectors_int(int* vec1, int* vec2, int n);
-
-double mult_vectors_int_and_double(int* vec1, double* vec2, int n);
-
-double mult_vectors_double(double* vec1, double* vec2, int n);
-############################################################### */
-
 void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, double* b_curr, double* b_next);
-void power_iteration2(spmat* Ag, int M, int* g_ranks, double* f, double* b_curr, double* b_next);
-void power_iteration3(spmat* Ag, int M, int* g_ranks, double* f, double* b_curr, double* b_next);
+
 
 double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, double* f, double* u, double* Au);
-double calc_leading_eigenvalue2(spmat* Ag, int M, int* g_ranks, double* f, double* u, double* Au);
-double calc_leading_eigenvalue3(spmat* Ag, int M, int* g_ranks, double* f, double* u, double* Au);
+
 
 double calc_deltaQ(spmat* Ag, int* result, int* s, int* g_ranks, int M, double* f);
-double calc_deltaQ2(spmat* Ag, int* s, int* g_ranks, int M, double* f);
-double calc_deltaQ3(spmat* Ag, int* s, int* g_ranks, int M, double* f);
+
 
 void create_random_vector(double *b, int len);
 
-/*i is the index of the row of Ag, we want to claculate score[i]*/
-/*### double calc_score(int* s, spmat* Ag, int* g_ranks, int M, int i, int* row); ### */
-void modularity_maximization(int* s, int* unmoved, int* indices, int* g_ranks, spmat* Ag, int M, int* row);
+
+void modularity_maximization(int* s, int* unmoved, int* indices, double* score, int* g_ranks, spmat* Ag, int M, int* row, int* result);
+
+
 void fill_with_ones(int* s, int len);
+
+
 void create_s(int* s, double* v, int len);
+
 
 void put_groups_in_stacks(group** splited_g, stack* P, stack* O);
 
-void initiate_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* result);
-void initiate_score2(spmat* Ag, double* score, int* g_ranks, int* s, int M);
 
-void update_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* row, int k);
-int find_max_score_index(double* score, int* unmoved, int unmoved_len);
-void modularity_maximization_new(int* s, int* unmoved, int* indices, double* score, int* g_ranks, spmat* Ag, int M, int* row, int* result);
-void modularity_maximization_new2(int* s, int* unmoved, int* indices, double* score, int* g_ranks, spmat* Ag, int M, int* row);
+
 
 #endif /* ALG_IMP_H_ */

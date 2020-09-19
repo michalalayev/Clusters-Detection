@@ -3,33 +3,6 @@
 #include "errors.h"
 
 
-/*this function is only for our use, not for the project. can be deleted before submition*/
-group* create_group_by_array(int *arr, int len)
-{
-	int i;
-	group* g;
-	ELEM *head, *node, *tail;
-	g = (group*) malloc(sizeof(group));
-	check_alloc(g);
-	head = (ELEM*) malloc(sizeof(ELEM));
-	check_alloc(head);
-	head -> data = arr[0];
-	tail = head;
-	for(i = 1; i < len; i++)
-	{
-		node = (ELEM*) malloc(sizeof(ELEM));
-		check_alloc(node);
-		node->data = arr[i];
-		tail->next = node;
-		tail = tail->next;
-
-	}
-	tail->next = NULL;
-	g->len = len;
-	g->head = head;
-	return g;
-}
-
 group* set_up_group(ELEM* head, int len)
 {
 	group* g;
