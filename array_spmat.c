@@ -3,24 +3,22 @@
 #include "spmat.h"
 #include "errors.h"
 
-
-/*add the nodes who are neighbors of node i to A*/
 void array_add_row(spmat *A, const int *nodes, int rank, int i)
 {
 	int j, insertind;
 	ArrayMat *arr_mat;
 	int col;
 
-	arr_mat = (ArrayMat*) A -> private;
-	insertind = arr_mat -> rowptr[i]; /*from which cell in values array we start filling*/
+	arr_mat = (ArrayMat*) A->private;
+	insertind = arr_mat->rowptr[i]; /*from which cell in values array we start filling*/
 
 	for (j = 0; j < rank; ++j) {
 		col = *nodes;
-		arr_mat -> colind[insertind] = col;
+		arr_mat->colind[insertind] = col;
 		insertind++;
 		nodes++;
 	}
-	arr_mat -> rowptr[i+1] = insertind; /*the number of non-zero elements in arr_mat currently*/
+	arr_mat->rowptr[i+1] = insertind; /*the number of non-zero elements in arr_mat currently*/
 }
 
 void array_free(spmat *A)
@@ -28,12 +26,11 @@ void array_free(spmat *A)
 	ArrayMat *arr_mat;
 
 	arr_mat = (ArrayMat*) A->private;
-	free(arr_mat -> colind);
-	free(arr_mat -> rowptr);
+	free(arr_mat->colind);
+	free(arr_mat->rowptr);
 	free(arr_mat);
 	free(A);
 }
-
 
 void array_mult_double(const spmat *A, const double *v, double *result)
 {
@@ -87,7 +84,6 @@ void array_mult_int(const spmat *A, const int *v, int *result)
 	}
 }
 
-
 spmat* spmat_allocate_array(int n, int nnz)
 {
 	spmat *sp;
@@ -96,6 +92,7 @@ spmat* spmat_allocate_array(int n, int nnz)
 	sp = (spmat*) malloc(sizeof(spmat));
 	check_alloc(sp);
 
+	/*initiate fields:*/
 	sp->n = n;
 	sp->add_row = array_add_row;
 	sp->free = array_free;
@@ -113,11 +110,6 @@ spmat* spmat_allocate_array(int n, int nnz)
 
 	return sp;
 }
-
-
-
-
-
 
 
 

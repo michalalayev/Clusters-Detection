@@ -22,31 +22,6 @@ void allocate_double(double** arr_ptr, int len)
 	check_alloc(*arr_ptr);
 }
 
-void print_output(char* filename) {  /*####### delete before submition #########*/
-
-	FILE* out;
-	int i, *arr;
-
-	arr = (int*) malloc(sizeof(int)*24);
-	out = fopen(filename,"r");
-	fread(arr, sizeof(int), 24, out);
-	for (i = 0; i < 24; ++i) {
-		printf("%d ",arr[i]);
-	}
-	free(arr);
-}
-
-void create_const_vector(double *b, int len) /*####### delete before submition #########*/
-{
-	int i;
-
-	for (i = 0; i < len; ++i)
-	{
-		*b = i;
-		b++;
-	}
-}
-
 /* Running the whole devision algorithm */
 int main (int argc, char* argv[])
 {
@@ -60,10 +35,6 @@ int main (int argc, char* argv[])
 	stack *P, *O;
 	off_t nnz;
 
-	clock_t start, end;
-	double time_total;
-
-	start = clock();
 	srand(time(NULL));
 	argc += 0;
 	input = argv[1]; /*the name of the binary input file */
@@ -100,7 +71,6 @@ int main (int argc, char* argv[])
 		calc_f_and_1norm(A, A_row, g, ranks, M, f);
 		ng = g->len;
 		create_random_vector(b_curr, ng);
-		/*create_const_vector(b_curr, ng);*/ /*############# delete this ##############3*/
 		if (first_partition) { /*we want to work with the whole A and ranks*/
 			Ag_tmp = Ag;
 			Ag = A;
@@ -156,11 +126,6 @@ int main (int argc, char* argv[])
 	free(unmoved);
 	free(P);
 	free(O);
-	print_output(output);
-
-	end = clock();
-	time_total = (double)(end-start) / CLOCKS_PER_SEC;
-	printf("\n\nExecution took %f seconds\n", time_total);
 
 	return 0;
 }

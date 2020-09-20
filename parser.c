@@ -5,9 +5,12 @@
 #include "errors.h"
 #include "group.h"
 
-int* ranks_vec;
-off_t nnz;
+int* ranks_vec; /*pointer to an array that contains the ranks of the nodes in the graph*/
+off_t nnz;      /*the number of non-zero elements in the adjacency matrix A*/
 
+
+/* Calcultes the number of non-zero elements in the matrix A,
+ * and saves this value in the variable nnz */
 void calc_nnz(const char *filename, int n) {
 
 	off_t size, ints;
@@ -64,10 +67,6 @@ off_t get_nnz() {
 	return nnz;
 }
 
-
-/* This function receives a stack of groups, outputs them in ascending order to the output file named filename,
- * and frees the allocated memory of the stack and groups.
- * arr is an array of length n, the nodes of the groups are saved there before they are written to the file*/
 void output_groups(char* filename, stack* stk, int* arr)
 {
 	FILE* output;
@@ -90,14 +89,14 @@ void output_groups(char* filename, stack* stk, int* arr)
 			arr++;
 		}
 		head = g->head;
-		for (j = 0; j < len; ++j) {
+		for (j = 0; j < len; ++j) { /*save the values to the array before writing it to the file*/
 			node = head;
 			head = head->next;
 			*arr = node->data;
 			arr++;
-			free(node);
+			free(node); /*free the memory allocated for the node*/
 		}
-		free(g);
+		free(g); /*free the memory allocated for the group*/
 		arr = arr_start;
 		if (num_of_groups != 1) {
 			k = fwrite(arr, sizeof(int), len+1, output);

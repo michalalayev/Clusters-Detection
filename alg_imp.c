@@ -4,7 +4,10 @@
 #include "alg_imp.h"
 #include "errors.h"
 
-
+/* g_vector is a pre-allocated array of zeroes. The function converts the group g to an array,
+ * where the index k of the array contains the index of node k in the group g.
+ * (if g[i] is the node k, then g_vector[k] = i. if i = 0, then g_vector[k] = -1).
+ * The function used to help create A[g] from A corresponding to a group g. */
 void g_to_vector(group* g, int* g_vector)
 {
 	int node_num;
@@ -54,7 +57,6 @@ void create_Ag(spmat* A, spmat* Ag, group* g, int* g_vector)
 	g_rp++;
 	g_colind = g_mat->colind;
 	cnt = 0;
-
 	for ( ; node != NULL; node = node->next){
 		data = node->data;
 		start = rp[data];
@@ -98,7 +100,6 @@ void build_full_row(spmat* A, int* A_row, int row_num)
 		colind++;
 	}
 }
-
 
 
 /*f is a vector of len ng+1, f[ng] = 1-norm */
@@ -200,7 +201,6 @@ double mult_vectors_double(double* vec1, double* vec2, int n)
 	return result;
 }
 
-/*when the function ends, b_curr is the wanted leading vector (normalized)*/
 void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, double* b_curr, double* b_next)
 {
 	double x, curr, next, magn, norm1;
@@ -236,6 +236,7 @@ void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, 
 			f++;
 			b_curr++;
 		}
+		/*get the pointers back to the start of the allocated memory:*/
 		f = f_start;
 		result = res_start;
 		g_ranks = g_ranks_start;
@@ -268,9 +269,6 @@ void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, 
 	}
 }
 
-
-
-/*u is the leading eigenvector of Bg_hat, it is saved on the memory allocated for b_curr*/
 double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, double* f, double* u, double* Au)
 {
 	double lamda, numerator, denominator, x, curr, next, *Au_start, *u_start;
@@ -295,17 +293,16 @@ double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, d
 		f++;
 		u++;
 	}
-
+	/*get the pointers back to the start of the allocated memory:*/
 	Au = Au_start;
 	u = u_start;
+
 	numerator = mult_vectors_double(u, Au, ng);
 	denominator = mult_vectors_double(u, u, ng);
 	check_devision_by_zero(denominator);
 	lamda = numerator/denominator;
-	return (lamda - norm1);
+	return (lamda - norm1); /*this is the leading eigenvalue of B[g]_hat*/
 }
-
-
 
 double calc_deltaQ(spmat* Ag, int* result, int* s, int* g_ranks, int M, double* f)
 {
@@ -339,38 +336,8 @@ void create_random_vector(double *b, int len)
 	}
 }
 
-
-/*i is the index of the row of Ag, we want to claculate score[i]*/
-double calc_score(int* s, spmat* Ag, int* g_ranks, int M, int i, int* row)
-{
-	double sum, x, score;
-	int ng, j;
-	int *s_start, *g_ranks_start;
-
-	build_full_row(Ag, row, i);
-	ng = Ag->n;
-	x = (double) g_ranks[i]/M;
-	s_start = s;
-	g_ranks_start = g_ranks;
-
-	sum = 0;
-	for (j = 0; j < ng; ++j) {
-		if (j == i) {
-			sum += ( (*row - x*(*g_ranks))*(-(*s)) );
-		}
-		else {
-			sum += ( (*row - x*(*g_ranks))*(*s) );
-		}
-		g_ranks++;
-		row++;
-		s++;
-	}
-	score =  4*(-s_start[i])*sum + 4*x*g_ranks_start[i];
-	return score;
-}
-
-
-
+/* Calculates the entries of the pre-allocated score array for the first time.
+ * Uses the sub-matrix A[g], g_ranks, s, M, and the pre-allocated helping array result. */
 void initiate_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* result)
 {
 	double a;
@@ -390,8 +357,9 @@ void initiate_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* 
 	}
 }
 
-
-/*k is max_score_index*/
+/* Updates the score array after every change of the vector s.
+ * k is index of the maximal value in the score array.
+ * Uses the sub-matrix A[g], g_ranks, s, M, and the pre-allocated helping array row. */
 void update_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* row, int k)
 {
 	int ng, sk, i;
@@ -415,6 +383,9 @@ void update_score(spmat* Ag, double* score, int* g_ranks, int* s, int M, int* ro
 	}
 }
 
+/* Finds and returns the index of the maximal value in score array, only from the
+ * indices matching to the nodes that weren't moved yet.
+ * Node i is moved only if unmoved[i] = 1. The array unmoved is of length unmoved_len.*/
 int find_max_score_index(double* score, int* unmoved, int unmoved_len)
 {
 	int i, max_score_index, first_unmoved;
@@ -425,12 +396,12 @@ int find_max_score_index(double* score, int* unmoved, int unmoved_len)
 		if(*unmoved == 0) {
 			if (first_unmoved) {
 				first_unmoved = 0;
-				max_score = *score;   /*initialize*/
+				max_score = *score;  /*initialize*/
 				max_score_index = i; /*initialize*/
 			}
 			else {
 				if (*score >= max_score) {
-					max_score = *score;   /*update*/
+					max_score = *score;  /*update*/
 					max_score_index = i; /*update*/
 				}
 			}
@@ -442,7 +413,8 @@ int find_max_score_index(double* score, int* unmoved, int unmoved_len)
 }
 
 
-void modularity_maximization(int* s, int* unmoved, int* indices, double* score, int* g_ranks, spmat* Ag, int M, int* row, int* result)
+void modularity_maximization(int* s, int* unmoved, int* indices, double* score, int* g_ranks, \
+		spmat* Ag, int M, int* row, int* result)
 {
 	double deltaQ, improve, max_improve;
 	int ng, i, max_imp_index, j;
@@ -450,13 +422,12 @@ void modularity_maximization(int* s, int* unmoved, int* indices, double* score, 
 
 	indices_start = indices;
 	ng = Ag->n;
-	deltaQ = 1;
+	deltaQ = 1; /*initiation*/
 	initiate_score(Ag, score, g_ranks, s, M, result);
 
 	while (IS_POSITIVE(deltaQ))
 	{
-		reset_row(unmoved, ng);
-
+		reset_row(unmoved, ng); /*setting unmoved to be all zeroes, 0 means unmoved node*/
 		for (i = 0; i < ng; ++i) {
 			if (i != 0) {
 				update_score(Ag, score, g_ranks, s, M, row, j);
@@ -466,29 +437,29 @@ void modularity_maximization(int* s, int* unmoved, int* indices, double* score, 
 			*indices = j;
 			indices++;
 			if (i == 0) {
-				improve = score[j];   /*initialize improve*/
+				improve = score[j];    /*initialize improve*/
 				max_improve = improve; /*initialize max_improve*/
 				max_imp_index = 0;     /*initialize max_imp_index*/
 			}
 			else {
 				improve += score[j];
 				if (improve >= max_improve) {
-					max_improve = improve;
-					max_imp_index = i;
+					max_improve = improve; /*update max_improve*/
+					max_imp_index = i;     /*update max_imp_index*/
 				}
 			}
-			unmoved[j] = 1;
+			unmoved[j] = 1; /*1 means that the node j has been moved*/
 		}
 		/* end of for loop */
-		update_score(Ag, score, g_ranks, s, M, row, j);
-		indices = indices_start;
+		update_score(Ag, score, g_ranks, s, M, row, j); /*update score for the last iteration*/
+		indices = indices_start; /*move the pointer back to the start of the allocated memory*/
 		for (i = (max_imp_index+1); i < ng; ++i) {
 			j = indices[i];
 			s[j] = -s[j];
-			update_score(Ag, score, g_ranks, s, M, row, j);
+			update_score(Ag, score, g_ranks, s, M, row, j); /*update score for every change in s*/
 		}
-		if (max_imp_index == (ng-1)) {
-			deltaQ = 0;
+		if (max_imp_index == (ng-1)) { /*s is the same as in the previous devision*/
+			deltaQ = 0; /*no improvment*/
 		}
 		else {
 			deltaQ = max_improve;
