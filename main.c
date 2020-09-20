@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
 {
 	char *input, *output;
 	spmat *A, *Ag, *Ag_tmp;
-	int *ranks, *g_ranks, *A_row, *s, *tmp, *res_int, *indices, *unmoved; /*A_row is also for g_vec*/
+	int *ranks, *g_ranks, *A_row, *s, *tmp, *res_int, *indices, *unmoved;
 	double *f, *b_curr, *b_next, *result, eigen_val, deltaQ;
 	int n, M, first_partition, ng;
 	ArrayMat *arr_mat;
@@ -65,7 +65,6 @@ int main (int argc, char* argv[])
 
 	start = clock();
 	srand(time(NULL));
-
 	argc += 0;
 	input = argv[1]; /*the name of the binary input file */
 	A = create_A(input);
@@ -157,7 +156,7 @@ int main (int argc, char* argv[])
 	free(unmoved);
 	free(P);
 	free(O);
-	/*print_output(output);*/
+	print_output(output);
 
 	end = clock();
 	time_total = (double)(end-start) / CLOCKS_PER_SEC;

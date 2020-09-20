@@ -1,12 +1,14 @@
 #include "stack.h"
+#include "errors.h"
 
 stack* initialize_stack()
 {
 	stack *stk;
 
 	stk = (stack*) malloc(sizeof(stack));
-	stk -> cnt = 0;
-	stk -> top = NULL;
+	check_alloc(stk);
+	stk -> cnt = 0;    /* no elements in the stack */
+	stk -> top = NULL; /* no top element, empty stack*/
 	return stk;
 }
 
@@ -15,10 +17,11 @@ void push(group *g, stack *stk)
    s_elem* p;
 
    p = (s_elem*) malloc(sizeof(s_elem));
+   check_alloc(p);
    p -> g = g;
    p -> next = stk -> top;
-   stk -> top = p;
-   stk -> cnt++;
+   stk -> top = p; /*p is now at the top of the stack*/
+   stk -> cnt++;   /*one element addded*/
 }
 
 group* pop(stack *stk)
@@ -26,10 +29,10 @@ group* pop(stack *stk)
    group* g;
    s_elem* p;
 
-   g = stk -> top -> g;
+   g = stk -> top -> g; /*save pointer to the top group*/
    p = stk -> top;
    stk -> top = stk -> top -> next;
-   stk -> cnt--;
+   stk -> cnt--; /*one element removed*/
    free(p);
    return g;
 }

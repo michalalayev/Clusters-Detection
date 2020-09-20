@@ -1,4 +1,4 @@
-#include <stdlib.h> /* for rand() */
+#include <stdlib.h> /* for rand */
 #include <string.h> /* for memset */
 #include <math.h>
 #include "alg_imp.h"
@@ -270,7 +270,7 @@ void power_iteration(spmat* Ag, double* result, int M, int* g_ranks, double* f, 
 
 
 
-/*u is the leading eigenvector of Bg, it is saved on the memory allocated for b_curr*/
+/*u is the leading eigenvector of Bg_hat, it is saved on the memory allocated for b_curr*/
 double calc_leading_eigenvalue(spmat* Ag, double* result, int M, int* g_ranks, double* f, double* u, double* Au)
 {
 	double lamda, numerator, denominator, x, curr, next, *Au_start, *u_start;
